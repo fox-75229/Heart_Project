@@ -1,0 +1,14 @@
+Metadata-Version: 2.4
+Name: heart-project
+Version: 0.1.0
+Summary: Add your description here
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: flask>=3.1.2
+Requires-Dist: matplotlib>=3.10.7
+Requires-Dist: requests>=2.32.5
+Requires-Dist: scikit-learn>=1.7.2
+Requires-Dist: pandas>=2.3.3
+
+# Heart_Project
+職能發展學院_python機器學習_2025專題
