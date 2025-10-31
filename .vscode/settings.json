@@ -1,0 +1,3 @@
+{
+    "copilot.chat.instructions": "這是一個 Flask的專案。使用的是uv的虛擬環境,在終端機輸入'.venv\\Scripts\\activate'來啟動虛擬環境。",
+}
