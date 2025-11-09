@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}職能發展學院-機器學習{% endblock %}
+
+
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+{% endblock %}
+
+
+
+{% block content %}
+<main class="container">
+    <div class="hero-section">
+        <h1>心臟衰竭預測模型</h1>
+        <p class="lead">使用 Kaggle 心臟衰竭臨床資料集，透過機器學習建立患者病情預測模型。</p>
+        <p class="subtitle">資料涵蓋 918 位患者，包含年齡、血清膽固醇等 12 項關鍵臨床特徵。</p>
+    </div>
+    <div class="algorithms-section">
+        <h2>預測模型所使用的核心演算法</h2>
+
+        <!-- 決策樹卡片 -->
+        <div class="algorithm-card">
+            <div class="card-header">
+                <h3>決策樹 (Decision Tree)</h3>
+                <span class="badge">分類模型</span>
+            </div>
+            <div class="card-body">
+                <h4>演算法原理</h4>
+                <p>決策樹是一種直觀的監督式學習模型。它透過學習數據中的規則，建立一個樹狀結構來進行決策。模型會從根節點 (Root) 開始，根據某個最佳特徵（例如
+                    ST_Slope）將資料進行分割，然後在子節點上重複此過程，直到達到葉 節點 (Leaf) 為止。每個葉節點都代表一個最終的分類結果（例如「有心臟病」或「無心臟病」）。</p>
+
+                <h4>本專案的適用性</h4>
+                <ul>
+                    <li>分類任務： 本專案的目標是預測 HeartDisease（是/否），這是一個決策樹能有效處理的分類問題。</li>
+                    <li>高度可視化與可解釋性：
+                        決策樹最大的優勢是透明度。它可以被繪製出來，形成一個類似臨床診斷流程圖的結構，讓我們能清楚地看到模型是如何根據特定特徵（例如「運動是否誘發心絞痛」為
+                        'Y'）來一步步進行判斷的。</li>
+                </ul>
+
+                <h4>優缺點分析 (於本專案)</h4>
+                <div class="pros-cons">
+                    <div class="pros">
+                        <strong>優點：</strong>
+                        <ul>
+                            <li>可解釋性極強：決策路徑非常直觀，易於理解和向他人（如醫師）解釋。</li>
+                            <li>無需特徵縮放：決策樹對特徵的尺度不敏感，因此本專案中的 StandardScaler 步驟對它不是必需的（但類別編碼仍需要）。</li>
+                            <li>能夠捕捉特徵間的非線性關係。</li>
+                        </ul>
+                    </div>
+                    <div class="cons">
+                        <strong>缺點：</strong>
+                        <ul>
+                            <li>容易過度擬合 (Overfitting)：模型可能會學習到訓練資料中過多的雜訊，導致對新資料的預測能力下降。</li>
+                            <li>不穩定性：訓練資料的微小變動（例如移除幾筆資料）可能導致生成一顆完全不同的樹。</li>
+                            <li>對於複雜的問題，樹可能會長得非常深且難以閱讀。</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h4>本專案的實際應用與結果</h4>
+                <p><strong>心臟衰竭預測實戰：</strong>
+                    本專案使用Kaggle心臟衰竭臨床資料集，我們使用了 Age、Sex、Cholesterol 以及 ST_Slope 等 12 項關鍵臨床特徵。在將類別特徵（如Sex、ChestPainType）進行標籤編碼
+                    (Label Encoding) 處理後，我們投入決策樹模型進行訓練。此模型在測試集上達到了 83.65%的準確率（0.8365）。雖然這個準確率不是所有模型中最高的，但決策樹為我們提供了極具價值的決策規則洞察，讓我們能直觀地理解哪些特徵組合是判斷心臟衰竭的關鍵。
+                </p>
+
+                <div class="action-button">
+                    <a href="{{ url_for('decision_tree')}}" class="btn-primary">立即體驗模型 →</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 邏輯回歸卡片 -->
+        <div class="algorithm-card">
+            <div class="card-header">
+                <h3>邏輯迴歸 (Logistic Regression)</h3>
+                <span class="badge">分類模型</span>
+            </div>
+            <div class="card-body">
+                <h4>演算法原理</h4>
+                <p>邏輯迴歸是解決二元分類問題的經典模型，其核心目標是預測一個事件發生的機率。在本專案中，用來計算患者「是否會有心臟病」的機率。它透過 Sigmoid
+                    函數，將多個臨床特徵（如年齡、血壓）的線性組合，轉換為一個介於 0 到 1
+                    之間的機率值，從而進行分類決策。</p>
+
+                <h4>本專案的適用性</h4>
+                <ul>
+                    <li>二元目標：本專案的預測目標心臟病是一個「是/否」的二元結果，這正好是邏輯迴歸適合處理的經典場景。</li>
+                    <li>臨床可解釋性：在醫療診斷中，理解「為何」模型會做出此預測至關重要。邏輯迴歸能清楚顯示每個臨床特徵（例如 ST
+                        段斜率、運動是否誘發心絞痛）對心臟衰竭風險的正面或負面影響程度，為臨床決策提供一定的參考價值。</li>
+                </ul>
+
+                <h4>優缺點分析</h4>
+                <div class="pros-cons">
+                    <div class="pros">
+                        <strong>優點：</strong>
+                        <ul>
+                            <li>簡單高效，實現與理解都非常容易</li>
+                            <li>可解釋性強，能提供每個特徵對結果機率的影響程度</li>
+                            <li>模型輸出是機率值，方便進行決策分析</li>
+                            <li>訓練速度快，資源消耗低</li>
+                        </ul>
+                    </div>
+                    <div class="cons">
+                        <strong>缺點：</strong>
+                        <ul>
+                            <li>主要適用於線性可分的資料集</li>
+                            <li>無法處理複雜的非線性邊界，表現可能不如深度學習模型</li>
+                            <li>過度依賴特徵工程，特徵選取與轉換的品質影響大</li>
+                            <li>容易受到共線性（特徵間高度相關）的影響</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h4>本專案的實際應用與結果</h4>
+                <p><strong>心臟衰竭預測實戰：</strong>
+                    在本專案使用Kaggle心臟衰竭臨床資料集，透過 Age、Sex、Cholesterol等12 項關鍵臨床特徵。在經過資料清理、將 ST 段斜率',
+                    '運動是否誘發心絞痛等作為特徵，投入邏輯迴歸模型進行訓練。此模型在測試集上達到了
+                    0.8462 的準確率。透過邏輯迴歸作為一個預測工具，它提供的高可解釋性，使我們能夠大約了解哪些是導致心臟病的關鍵風險因子，以及一定程度的參考價值。
+                </p>
+
+                <div class="action-button">
+                    <a href="{{ url_for('logistic')}}" class="btn-primary">立即體驗模型 →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="info-section">
+        <h2>為什麼選擇互動式學習？</h2>
+        <div class="features">
+            <div class="feature-item">
+                <h4>視覺化理解</h4>
+                <p>透過圖表直觀呈現演算法運作過程，將抽象概念具象化</p>
+            </div>
+            <div class="feature-item">
+                <h4>即時互動</h4>
+                <p>調整參數立即看到結果變化，深入理解參數對模型的影響</p>
+            </div>
+            <div class="feature-item">
+                <h4>真實資料</h4>
+                <p>使用 Kaggle 經典資料集，呈現真實的機器學習應用</p>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+
+
+{% block code %}
+<script src="{{ url_for('static', filename='js/index.js') }}"></script>
+{% endblock %}
