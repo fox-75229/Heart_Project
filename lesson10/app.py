@@ -1,17 +1,15 @@
 from flask import Flask,render_template, jsonify
+import pandas as pd# 載入 Pandas 讀取csv
 import numpy as np
-# 載入 Pandas 讀取csv
-import pandas as pd
 import os # 確保檔案路徑正確
+
 
 from sklearn.datasets import fetch_california_housing
 # 載入邏輯迴歸模型
 from sklearn.linear_model import LogisticRegression
-from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import r2_score, mean_squared_error,accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
-
+from sklearn.linear_model import LinearRegression
 
 app = Flask(__name__)
 
@@ -47,84 +45,101 @@ def logistic_data():
 
         # 檢查檔案是否正確載入
         if not os.path.exists(csv_path):
-            raise FileNotFoundError(f"找不到檔案:{csv_path}。請確認")
+            raise FileNotFoundError(f"找不到檔案:{csv_path}")
+        
         #讀取'csv_path'
-        data = pd.read_csv(csv_path)
+        qust_cleaned = pd.read_csv(csv_path)
         
-        # 取得特徵
-        feature_1 = 'ST_Slope'
-        feature_2 = 'ExerciseAngina'
-        target = 'HeartDisease'
-
-        if feature_1 not in data.columns or feature_2 not in data.columns or target not in data.columns:
-            raise KeyError(f"csv 檔案缺少'{feature_1}'、'{feature_2}'or'{target}'欄位'。")
+        # -----------------------------------------------------------------
+        # 2. [A 部分] 訓練「高分模型」 (All Features)
+        # -----------------------------------------------------------------
         
-        x = data[[feature_1, feature_2]]
-        y = data[target]
-
-        #分割資料
-        X_train, X_test, y_train, y_test = train_test_split(
-            x, y, test_size=0.3, random_state=42, stratify=y
+        target = '是否有心臟病'
+        if target not in qust_cleaned.columns:
+            raise KeyError(f"CSV 檔案缺少目標欄位: '{target}'")
+            
+        X_all = qust_cleaned.drop(columns=[target])
+        y_all = qust_cleaned[target]
+        
+        # 依照您 Colab 的 test_size=0.3
+        X_train_all, X_test_all, y_train_all, y_test_all = train_test_split(
+            X_all, y_all, test_size=0.3, random_state=42, stratify=y_all
         )
-        # 訓練邏輯迴歸
-        model = LogisticRegression(random_state=42, solver='liblinear')
-        model.fit(X_train, y_train)
+        
+        # 訓練「高分模型」 (不縮放, 匹配 Colab)
+        model_best = LogisticRegression(random_state=42, solver='liblinear', max_iter=1000)
+        model_best.fit(X_train_all, y_train_all)
 
-        #產生決策邊界
-        x_min, x_max = X.iloc[:, 0].min() - 0.5, X.iloc[:, 0].max() + 0.5
-        y_min, y_max = X.iloc[:, 1].min() - 0.5, X.iloc[:, 1].max() + 0.5
-        #網格密度
+        # 計算「高分」指標
+        y_pred_class_best = model_best.predict(X_test_all)
+        y_pred_proba_best = model_best.predict_proba(X_test_all)[:, 1]
+
+        best_metrics = {
+            "accuracy": round(accuracy_score(y_test_all, y_pred_class_best), 4),
+            "precision": round(precision_score(y_test_all, y_pred_class_best), 4),
+            "recall": round(recall_score(y_test_all, y_pred_class_best), 4),
+            "f1": round(f1_score(y_test_all, y_pred_class_best), 4),
+            "auc": round(roc_auc_score(y_test_all, y_pred_proba_best), 4)
+        }
+        # (這組數字現在會 100% 即時計算，並接近 0.8462)
+
+        # -----------------------------------------------------------------
+        # 3. [B 部分] 訓練「圖表模型」 (2 Features)
+        # -----------------------------------------------------------------
+        feature_1 = 'ST 段斜率'
+        feature_2 = '運動是否誘發心絞痛'
+        
+        if feature_1 not in qust_cleaned.columns or feature_2 not in qust_cleaned.columns:
+            raise KeyError(f"qust_cleaned 中缺少 '{feature_1}' 或 '{feature_2}'")
+
+        x_plot = qust_cleaned[[feature_1, feature_2]]
+        y_plot = qust_cleaned[target]
+
+        X_train_plot, X_test_plot, y_train_plot, y_test_plot = train_test_split(
+            x_plot, y_plot, test_size=0.3, random_state=42, stratify=y_plot
+        )
+        
+        model_plot = LogisticRegression(random_state=42, solver='liblinear')
+        model_plot.fit(X_train_plot, y_train_plot)
+
+        # 產生決策邊界
+        x_min, x_max = x_plot.iloc[:, 0].min() - 0.5, x_plot.iloc[:, 0].max() + 0.5
+        y_min, y_max = x_plot.iloc[:, 1].min() - 0.5, x_plot.iloc[:, 1].max() + 0.5
         step = 0.1
         xx, yy = np.meshgrid(np.arange(x_min, x_max, step), np.arange(y_min, y_max, step))
 
-        #預測
         meshgrid_data = np.c_[xx.ravel(), yy.ravel()]
         meshgrid_data_df = pd.DataFrame(meshgrid_data, columns=[feature_1, feature_2])
-        Z = model.predict(meshgrid_data_df)
+        Z = model_plot.predict(meshgrid_data_df)
         Z = Z.reshape(xx.shape)
-
-        # 計算評估指標
-        y_pred_test = model.predict(X_test)
-        # AUC 
-        y_pred_test = model.predict_proba(X_test)[:, 1]
-
-        metrics = {
-            "accuracy": round(accuracy_score(y_test, y_pred_test), 4),
-            "precision": round(precision_score(y_test, y_pred_test), 4),
-            "recall": round(recall_score(y_test, y_pred_test), 4),
-            "f1": round(f1_score(y_test, y_pred_test), 4),
-            "auc": round(roc_auc_score(y_test, y_pred_test), 4)
-        }
-        # 準備json回應資料
+        
+        # --- 4. [C 部分] 合併回應 ---
         response = {
             "success": True,
-            "data":{
-
-                #散點圖資料
+            "data":{ # 來自「B 部分」的圖表資料
                 "train_points":{
-                    "x1": X_train[feature_1].tolist(),
-                    "x2": X_train[feature_2].tolist(),
-                    "y": y_train.tolist()
+                    "x1": X_train_plot[feature_1].tolist(),
+                    "x2": X_train_plot[feature_2].tolist(),
+                    "y": y_train_plot.tolist()
                 },
                 "test_points":{
-                    "x1": X_test[feature_1].tolist(),
-                    "x2": X_test[feature_2].tolist(),
-                    "y": y_test.tolist()
+                    "x1": X_test_plot[feature_1].tolist(),
+                    "x2": X_test_plot[feature_2].tolist(),
+                    "y": y_test_plot.tolist()
                 },
-                #決策邊界資料
                 "decision_boundary":{
                     "xx": xx.tolist(),
                     "yy": yy.tolist(),
                     "Z": Z.tolist()
                 }
             },
-            "metrics": metrics,
+            "metrics": best_metrics, # 來自「A 部分」的高分指標
             "description":{
-                "dataset": "心臟衰竭資料集",
+                "dataset": "心臟衰竭預測資料集 (已清理)",
                 "x1_feature": feature_1,
                 "x2_feature": feature_2,
                 "y_target": target,
-                "info": "圖表顯示邏輯迴歸模型如何使用 2 個特徵來劃分決策邊界。"
+                "info": "圖表顯示2D模型，指標顯示All-Feature模型。"
             }
         }
         return jsonify(response)

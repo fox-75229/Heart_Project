@@ -29,59 +29,59 @@
             🎯 <strong>提示</strong>：下方圖表將展示「<strong>ST 段斜率</strong>」(X 軸) 與「<strong>運動是否誘發心絞痛</strong>」(Y 軸) 如何劃分模型的決策邊界。
         </p>
     </div>
-    <!-- 圖例說明 (待處理)-->
-    <!-- <div class="legend-info">
-        <h4>圖表說明</h4>
+
+    <div class="legeng-info">
+        <h4>圖例說明</h4>
         <ul>
-            <li><span class="legeng-dot train"></span> 訓練資料點</li>
-            <li><span class="legeng-dot test"></span> 測試資料點</li>
-            <li><span class="legeng-line"></span> 線性迴歸線</li>
+            <li><span class="legeng-0-train"></span>無心臟病(訓練)</li>
+            <li><span class="legeng-1-train"></span>有心臟病(訓練)</li>
+            <li><span class="legeng-0-test"></span>無心臟病(測試)</li>
+            <li><span class="legeng-1-test"></span>有心臟病(測試)</li>
         </ul>
-        <p class="help-text">將滑鼠移到資料點上可以看到詳細資訊</p>
-    </div> -->
-<div class="legeng-info">
-    <h4>圖例說明</h4>
-    <ul>
-        <li><span class="legeng-0-train"></span>無心臟病(訓練)</li>
-        <li><span class="legeng-1-train"></span>有心臟病(訓練)</li>
-        <li><span class="legeng-0-test"></span>無心臟病(測試)</li>
-        <li><span class="legeng-1-test"></span>有心臟病(測試)</li>
-    </ul>
-    <p class="help-text">圖表背景 (紅/藍) 代表模型的決策區域。您可以縮放或懸停</p>
-</div>
+        <p class="help-text">圖表背景 (紅/藍) 代表模型的決策區域。您可以縮放或懸停</p>
+    </div>
 
-<div class="chart-container">
-    <div id="plotly-chart">
-        <div class="loading-spinner"></div>
-        <p class="loading-text">正在從伺服器載入並訓練模型...</p>
+    <div class="chart-container">
+        <div id="plotly-chart" class="loading">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">正在從伺服器載入並訓練模型...</p>
+        </div>
     </div>
-</div>
 
-<div class="metrics-container">
-    <div class="metrics-card">
-        <h4>準確率</h4>
-        <div id="metrics-accuracy" class="metric-value">--</div>
+    <div class="metrics-container">
+        <h3>模型評估指標</h3>
+        <div class="metrics-grid">
+            <div class="metrics-card">
+                <h4>準確率</h4>
+                <div id="metrics-accuracy" class="metric-value">--</div>
+                <div class="metric-description">模型預測正確的比例</div>
+            </div>
+            <div class="metrics-card">
+                <h4>精確率</h4>
+                <div id="metrics-precision" class="metric-value">--</div>
+                <div class="metric-description">預測為正樣本中實際為正的比例</div>
+            </div>
+            <div class="metrics-card">
+                <h4>召回率</h4>
+                <div id="metrics-recall" class="metric-value">--</div>
+                <div class="metric-description">實際正樣本中被正確預測的比例</div>
+            </div>
+            <div class="metrics-card">
+                <h4>F1 Score</h4>
+                <div id="metrics-f1" class="metric-value">--</div>
+                <div class="metric-description">精確率與召回率的綜合表現</div>
+            </div>
+            <div class="metrics-card">
+                <h4>AUC 值</h4>
+                <div id="metrics-auc" class="metric-value">--</div>
+                <div class="metric-description">ROC 曲線下的面積，越大越好</div>
+            </div>
+        </div>
     </div>
-    <div class="metrics-card">
-        <h4>精確率</h4>
-        <div id="metrics-precision" class="metric-value">--</div>
-    </div>
-    <div class="metrics-card">
-        <h4>召回率</h4>
-        <div id="metrics-recall" class="metric-value">--</div>
-    </div>
-    <div class="metrics-card">
-        <h4>F1 Score</h4>
-        <div id="metrics-f1" class="metric-value">--</div>
-    </div>
-    <div class="metrics-card">
-        <h4>AUC 值</h4>
-        <div id="metrics-auc" class="metric-value">--</div>
-    </div>
-</div>
 
 </div>
 {% endblock %}
+
 
 {% block scripts %}
 {{super()}}
