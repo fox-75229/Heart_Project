@@ -16,7 +16,6 @@
     </div>
 
 
-    <!-- 資料集說明 -->
     <div class="info-card">
         <h3>關於資料集</h3>
         <p>
@@ -27,59 +26,59 @@
             <strong>12項</strong>關鍵臨床特徵（如胸痛類型、最大心率、膽固醇等）。
         </p>
         <p class="highlight">
-            🎯 <strong>提示(待修)</strong>：下方#####
+            🎯 <strong>提示</strong>：下方圖表將展示「<strong>ST 段斜率</strong>」(X 軸) 與「<strong>運動是否誘發心絞痛</strong>」(Y 軸) 如何劃分模型的決策邊界。
         </p>
     </div>
     <!-- 圖例說明 (待處理)-->
     <!-- <div class="legend-info">
         <h4>圖表說明</h4>
         <ul>
-            <li><span class="legend-dot train"></span> 訓練資料點</li>
-            <li><span class="legend-dot test"></span> 測試資料點</li>
-            <li><span class="legend-line"></span> 線性迴歸線</li>
+            <li><span class="legeng-dot train"></span> 訓練資料點</li>
+            <li><span class="legeng-dot test"></span> 測試資料點</li>
+            <li><span class="legeng-line"></span> 線性迴歸線</li>
         </ul>
         <p class="help-text">將滑鼠移到資料點上可以看到詳細資訊</p>
     </div> -->
-    <div class="legeng-info">
-        <h4>圖例說明</h4>
-        <ul>
-            <li><span class="legend-dot-0-train"></span>無心臟病(訓練)</li>
-            <li><span class="legend-dot-1-train"></span>有心臟病(訓練)</li>
-            <li><span class="legend-dot-0-test"></span>無心臟病(測試)</li>
-            <li><span class="legend-dot-1-test"></span>有心臟病(測試)</li>
-        </ul>
-        <p class="help-text">圖表背景 (紅/藍) 代表模型的決策區域。您可以縮放或懸停</p>
-    </div>
-    <div class="chart-container">
-        <div id="plotly-chart">
-            <div class="loading-spinner"></div>
-            <p class="loading-text">正在從伺服器載入並訓練模型...</p>
-        </div>
-    </div>
+<div class="legeng-info">
+    <h4>圖例說明</h4>
+    <ul>
+        <li><span class="legeng-0-train"></span>無心臟病(訓練)</li>
+        <li><span class="legeng-1-train"></span>有心臟病(訓練)</li>
+        <li><span class="legeng-0-test"></span>無心臟病(測試)</li>
+        <li><span class="legeng-1-test"></span>有心臟病(測試)</li>
+    </ul>
+    <p class="help-text">圖表背景 (紅/藍) 代表模型的決策區域。您可以縮放或懸停</p>
+</div>
 
-    <div class="metrics-container">
-        <div class="metrics-card">
-            <h4>準確率</h4>
-            <div id="metrics-accuracy" class="metric-value">--</div>
-            <div class="metric-description"></div>
-        </div>
-        <div class="metrics-card">
-            <h4>精確綠</h4>
-            <div id="metrics-precision" class="metric-value">--</div>
-        </div>
-        <div class="metrics-card">
-            <h4>召回率</h4>
-            <div id="metrics-recall" class="metric-value">--</div>
-        </div>
-        <div class="metrics-card">
-            <h4>F1 Score</h4>
-            <div id="metrics-f1" class="metric-value">--</div>
-        </div>
-        <div class="metrics-card">
-            <h4>AUC 值</h4>
-            <div id="metrics-auc" class="metric-value">--</div>
-        </div>
+<div class="chart-container">
+    <div id="plotly-chart">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">正在從伺服器載入並訓練模型...</p>
     </div>
+</div>
+
+<div class="metrics-container">
+    <div class="metrics-card">
+        <h4>準確率</h4>
+        <div id="metrics-accuracy" class="metric-value">--</div>
+    </div>
+    <div class="metrics-card">
+        <h4>精確率</h4>
+        <div id="metrics-precision" class="metric-value">--</div>
+    </div>
+    <div class="metrics-card">
+        <h4>召回率</h4>
+        <div id="metrics-recall" class="metric-value">--</div>
+    </div>
+    <div class="metrics-card">
+        <h4>F1 Score</h4>
+        <div id="metrics-f1" class="metric-value">--</div>
+    </div>
+    <div class="metrics-card">
+        <h4>AUC 值</h4>
+        <div id="metrics-auc" class="metric-value">--</div>
+    </div>
+</div>
 
 </div>
 {% endblock %}
@@ -87,5 +86,5 @@
 {% block scripts %}
 {{super()}}
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-<script src="{{ url_for('static', filename='js/logistic.js')}}></script>
+<script src="{{ url_for('static', filename='js/logistic.js') }}"></script>
 {% endblock %}
