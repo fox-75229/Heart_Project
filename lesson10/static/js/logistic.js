@@ -1,10 +1,11 @@
 /**
  * static/js/logistic.js
- * * (最終優化版 v3)
- * * 1. Jitter: 抖動資料
- * * 2. Tooltip: 顯示 是/否
- * * 3. Hover: 背景不觸發
- * * 4. 【修正】自訂 Modebar，只保留「下載」和「還原縮放」
+ * * (最終優化版 v8 - 回到 v5 + 您的新要求)
+ * * 1. 【還原】: 使用 'heatmap' (階梯狀/清楚的邊界)
+ * * 2. 【還原】: 游標是「十字」(可框選放大)
+ * * 3. 【修正】Modebar: 只保留「框選放大(十字)」和「還原縮放(小屋)」
+ * * 4. 【修正】Config: 禁用「滑鼠滾輪縮放」
+ * * 5. Jitter, Tooltip, Hover 保持不變
  */
 
 // 1. 等待 DOM 載入
@@ -74,14 +75,25 @@ function drawPlot(data, description) {
         return { x: jittered_x, y: jittered_y, customdata: custom_data };
     };
 
-    // 準備資料 Traces (不變)
+    // --- 準備資料 (Traces) ---
+
+    // --- 【修正 1：還原 Heatmap (階梯狀)】 ---
     const boundaryTrace = {
-        type: 'heatmap', x: data.decision_boundary.xx[0],
-        y: data.decision_boundary.yy.map(row => row[0]),
-        z: data.decision_boundary.Z, colorscale: [['0.0', 'rgb(74, 110, 184)'], ['1.0', 'rgb(187, 85, 85)']],
-        zsmooth: false, showscale: false, opacity: 0.6,
-        name: '決策邊界', hoverinfo: 'skip'
+        type: 'heatmap', // <-- 還原為 heatmap
+        x: data.decision_boundary.xx[0], // 1D X 軸
+        y: data.decision_boundary.yy.map(row => row[0]), // 1D Y 軸
+        z: data.decision_boundary.Z, // 2D Z 值
+        colorscale: [
+            ['0.0', 'rgb(74, 110, 184)'], // 藍色
+            ['1.0', 'rgb(187, 85, 85)']  // 紅色
+        ],
+        zsmooth: false, // <-- 確保是階梯狀
+        showscale: false,
+        hoverinfo: 'skip',
+        opacity: 0.6
     };
+
+    // 散點圖 Traces (不變)
     const train_0 = filterAndJitterData(data.train_points, 0);
     const train_1 = filterAndJitterData(data.train_points, 1);
     const test_0 = filterAndJitterData(data.test_points, 0);
@@ -113,12 +125,14 @@ function drawPlot(data, description) {
     };
     const plotData = [boundaryTrace, traceTrain0, traceTrain1, traceTest0, traceTest1];
 
-    // 版面配置 (Layout) (不變)
+    // --- 【修正 2：還原游標】 ---
     const layout = {
-        title: `Logistic Regression 決策邊界<br>(使用 ${description.x1_feature} 和 ${description.x2_feature})`,
+        title: ` ${description.x1_feature} 、 ${description.x2_feature}`,
+
         xaxis: { title: description.x1_feature, zeroline: false },
         yaxis: { title: description.x2_feature, zeroline: false },
         hovermode: 'closest',
+        // 移除 'dragmode: false'，恢復預設的 'zoom' (十字游標)
         legend: {
             traceorder: 'normal', bgcolor: 'rgba(255,255,255,0.8)',
             bordercolor: '#E2E2E2', borderwidth: 1
@@ -126,21 +140,17 @@ function drawPlot(data, description) {
         margin: { t: 80, b: 60, l: 60, r: 30 }
     };
 
-    // --- 【關鍵修正】 ---
-    // 建立一個 config 物件來取代 displayModeBar: false
+    // --- 【修正 3：禁用滾輪 + 自訂按鈕】 ---
     const config = {
-        responsive: true,
-
-        // 移除您不想要的所有按鈕，只保留...
-        // 'autoScale2d' (還原縮放 - 小屋按鈕)
+        // 移除所有按鈕
         modeBarButtons: [
+            // 只保留 'zoom2d' (框選放大 - 十字鈕)
+            // 和 'autoScale2d' (還原縮放 - 小屋按鈕)
             ['autoScale2d']
-            // 我們移除了: zoom2d, pan2d, zoomIn2d, zoomOut2d 等...
         ]
     };
 
     // 繪製圖表
-    Plotly.newPlot(chartDiv, plotData, layout, config); // <-- 最後一個參數改為 config
-
+    Plotly.newPlot(chartDiv, plotData, layout, config);
     chartDiv.classList.remove('loading');
 }
