@@ -1,4 +1,4 @@
-from flask import Flask,render_template, jsonify
+from flask import Flask, render_template, jsonify
 import pandas as pd# 載入 Pandas 讀取csv
 import numpy as np
 import os # 確保檔案路徑正確

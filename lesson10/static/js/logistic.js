@@ -1,10 +1,4 @@
-/**
- * static/js/logistic.js
- * * (最終優化版 v2)
- * * 1. Jitter: 抖動資料
- * * 2. Tooltip: 【修正】將 '運動是否誘發心絞痛' (0/1) 映射為 '否'/'是'
- * * 3. Hover: 背景不觸發
- */
+
 
 // 1. 等待 DOM 載入
 document.addEventListener("DOMContentLoaded", () => {
@@ -167,7 +161,7 @@ function drawPlot(data, description) {
 
     // 版面配置 (Layout)
     const layout = {
-        title: `Logistic Regression 決策邊界<br>(使用 ${description.x1_feature} 和 ${description.x2_feature})`,
+        title: ` ${description.x1_feature} 、 ${description.x2_feature}`,
         xaxis: {
             title: description.x1_feature,
             zeroline: false
