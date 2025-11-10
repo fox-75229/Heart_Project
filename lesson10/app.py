@@ -11,6 +11,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score, mean_squared_error,accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 from sklearn.linear_model import LinearRegression
 
+#---Flask 應用設定---
 app = Flask(__name__)
 
 # 自定義JSON序列化設定
