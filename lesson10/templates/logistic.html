@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}職能發展學院-邏輯迴歸{% endblock %}
+
+
+{% block head %}
+{{super()}}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/logistic.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="logistic-container">
+    <div class="page-header">
+        <h1>邏輯迴歸 (Logistic Regression) </h1>
+        <p class="subtitle">使用心臟衰竭資料集進行心臟病預測 </p>
+    </div>
+
+
+    <div class="info-card">
+        <h3>關於資料集</h3>
+        <p>
+            心血管疾病 (CVD) 是全球首要死因，每年約奪去 1,790 萬人的生命。對於心血管高風險族群，早期發現和管理至關重要。
+        </p>
+        <p>
+            本分析使用來自 <strong>Kaggle 的「心臟衰竭預測資料集」</strong> 共包含 <strong>918 筆</strong>觀測資料與
+            <strong>12項</strong>關鍵臨床特徵（如胸痛類型、最大心率、膽固醇等）。
+        </p>
+        <p class="highlight">
+            🎯 <strong>提示</strong>：下方圖表將展示「<strong>ST 段斜率</strong>」(X 軸) 與「<strong>運動是否誘發心絞痛</strong>」(Y 軸) 如何劃分模型的決策邊界。
+        </p>
+    </div>
+
+    <div class="legeng-info">
+        <h4>圖例說明</h4>
+        <ul>
+            <li><span class="legeng-0-train"></span>無心臟病(訓練)</li>
+            <li><span class="legeng-1-train"></span>有心臟病(訓練)</li>
+            <li><span class="legeng-0-test"></span>無心臟病(測試)</li>
+            <li><span class="legeng-1-test"></span>有心臟病(測試)</li>
+        </ul>
+        <p class="help-text">圖表背景 (紅/藍) 代表模型的決策區域。您可以縮放或懸停</p>
+    </div>
+
+    <div class="chart-container">
+        <div id="plotly-chart" class="loading">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">正在從伺服器載入並訓練模型...</p>
+        </div>
+    </div>
+
+    <div class="metrics-container">
+        <h3>模型評估指標</h3>
+        <div class="metrics-grid">
+            <div class="metrics-card">
+                <h4>準確率</h4>
+                <div id="metrics-accuracy" class="metric-value">--</div>
+                <div class="metric-description">模型預測正確的比例</div>
+            </div>
+            <div class="metrics-card">
+                <h4>精確率</h4>
+                <div id="metrics-precision" class="metric-value">--</div>
+                <div class="metric-description">預測為正樣本中實際為正的比例</div>
+            </div>
+            <div class="metrics-card">
+                <h4>召回率</h4>
+                <div id="metrics-recall" class="metric-value">--</div>
+                <div class="metric-description">實際正樣本中被正確預測的比例</div>
+            </div>
+            <div class="metrics-card">
+                <h4>F1 Score</h4>
+                <div id="metrics-f1" class="metric-value">--</div>
+                <div class="metric-description">精確率與召回率的綜合表現</div>
+            </div>
+            <div class="metrics-card">
+                <h4>AUC 值</h4>
+                <div id="metrics-auc" class="metric-value">--</div>
+                <div class="metric-description">ROC 曲線下的面積，越大越好</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+{{super()}}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="{{ url_for('static', filename='js/logistic.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index')}}">職能發展學院</a>
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="{{ url_for('index')}}" {% if request.endpoint=='index' %} class="active" {% endif%}>簡介</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('decision_tree')}}" {% if request.endpoint=='decision_tree' %} class="active" {%
+                        endif %}>決策樹分類</a>
+                </li>
+            </ul>
+            <!-- 手機版導覽切換按鈕 -->
+            <button class="nav-toggle" aria-label="顯示導覽選單">
+                <svg class="hamburger-icon" viewBox="0 0 100 100" width="32" height="32">
+                    <rect class="line top" width="80" height="10" x="10" y="25" rx="5"></rect>
+                    <rect class="line middle" width="80" height="10" x="10" y="45" rx="5"></rect>
+                    <rect class="line bottom" width="80" height="10" x="10" y="65" rx="5"></rect>
+                </svg>
+            </button>
+         </div>
+    </nav>
+
+    <!-- 首頁內容 -->
+     <main class="container">
+        {% block contene %}
+
+        {% endblock %}
+
+     </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 職能發展學院:機器學習專題. All rights reserved.</p>
+        </div>
+    </footer>
+
+
+</body>
+
+</html>
