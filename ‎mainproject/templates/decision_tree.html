@@ -22,23 +22,18 @@
         <p>
             它會學習一系列的「是/否」問題（例如：`ST 段斜率` > 1.5 嗎？ `運動是否誘發心絞痛` == 1 嗎？），並像**流程圖**一樣將資料層層分類。
         </p>
-        <p>
-            本分析同樣使用來自 Kaggle 的「心臟衰竭預測資料集」（已清理，共 692 筆）來訓練模型。
-        </p>
         <p class="highlight">
-            🎯 <strong>提示</strong>：下方圖表將展示決策樹如何使用「<strong>水平和垂直線</strong>」將資料切割成不同的預測方塊（這與邏輯迴歸的平滑斜線不同）。
+            🎯 <strong>提示</strong>：下方圖表將**動態生成**此模型（基於 2 個特徵）的「**思考流程圖**」。
         </p>
     </div>
 
     <div class="legeng-info">
         <h4>圖表說明</h4>
         <ul>
-            <li><span class="legeng-0-train"></span>無心臟病(訓練)</li>
-            <li><span class="legeng-1-train"></span>有心臟病(訓練)</li>
-            <li><span class="legeng-0-test"></span>無心臟病(測試)</li>
-            <li><span class="legeng-1-test"></span>有心臟病(測試)</li>
+            <li><span class=""></span></li>
+            
         </ul>
-        <p class="help-text">圖表背景 (紅/藍) 代表模型的決策區域。您可以縮放或懸停</p>
+        <p class="help-text"></p>
     </div>
 
     <div class="chart-container">
@@ -85,6 +80,5 @@
 
 {% block scripts %}
 {{super()}}
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <script src="{{ url_for('static', filename='js/decision_tree.js') }}"></script>
 {% endblock %}
