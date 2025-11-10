@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}職能發展學院-決策樹{% endblock %}
+
+{% block head %}
+{{super()}}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/decision_tree.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="logistic-container">
+    <div class="page-header">
+        <h1>決策樹 (Decision Tree)</h1>
+        <p class="subtitle">使用心臟衰竭資料集進行心臟病預測 </p>
+    </div>
+
+    <div class="info-card">
+        <h3>關於決策樹</h3>
+        <p>
+            決策樹 (Decision Tree) 是一種直觀的機器學習模型，它模仿人類做決策的過程。
+        </p>
+        <p>
+            它會學習一系列的「是/否」問題（例如：`ST 段斜率` > 1.5 嗎？ `運動是否誘發心絞痛` == 1 嗎？），並像**流程圖**一樣將資料層層分類。
+        </p>
+        <p class="highlight">
+            🎯 <strong>提示</strong>：下方圖表將**動態生成**此模型（基於 2 個特徵）的「**思考流程圖**」。
+        </p>
+    </div>
+
+    <div class="legeng-info">
+        <h4>圖表說明</h4>
+        <ul>
+            <li><span class=""></span></li>
+            
+        </ul>
+        <p class="help-text"></p>
+    </div>
+
+    <div class="chart-container">
+        <div id="plotly-chart">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">正在從伺服器載入並訓練模型...</p>
+        </div>
+    </div>
+
+    <div class="metrics-container">
+        <h3>模型評估指標</h3>
+        <div class="metrics-grid">
+            <div class="metrics-card">
+                <h4>準確率</h4>
+                <div id="metrics-accuracy" class="metric-value">--</div>
+                <div class="metric-description">模型預測正確的比例</div>
+            </div>
+            <div class="metrics-card">
+                <h4>精確率</h4>
+                <div id="metrics-precision" class="metric-value">--</div>
+                <div class="metric-description">預測為正樣本中實際為正的比例</div>
+            </div>
+            <div class="metrics-card">
+                <h4>召回率</h4>
+                <div id="metrics-recall" class="metric-value">--</div>
+                <div class="metric-description">實際正樣本中被正確預測的比例</div>
+            </div>
+            <div class="metrics-card">
+                <h4>F1 Score</h4>
+                <div id="metrics-f1" class="metric-value">--</div>
+                <div class="metric-description">精確率與召回率的綜合表現</div>
+            </div>
+            <div class="metrics-card">
+                <h4>AUC 值</h4>
+                <div id="metrics-auc" class="metric-value">--</div>
+                <div class="metric-description">ROC 曲線下的面積，越大越好</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+{{super()}}
+<script src="{{ url_for('static', filename='js/decision_tree.js') }}"></script>
+{% endblock %}

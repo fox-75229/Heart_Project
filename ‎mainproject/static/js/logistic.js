@@ -1,10 +1,9 @@
 /**
  * static/js/logistic.js
- * * (最終優化版 v3)
- * * 1. Jitter: 抖動資料
- * * 2. Tooltip: 顯示 是/否
- * * 3. Hover: 背景不觸發
- * * 4. 【修正】自訂 Modebar，只保留「下載」和「還原縮放」
+ * * (最終優化版 v11 - 修正圖例到「頂部」)
+ * * 1. 【修正】: 將圖例 (Legend) y: 設為 1.02, yanchor: 設為 'bottom'
+ * * -> 這會將圖例放在「標題」和「圖表」之間
+ * * 2. 保持 Heatmap, 十字游標, 禁用滾輪, 只保留還原按鈕
  */
 
 // 1. 等待 DOM 載入
@@ -74,13 +73,20 @@ function drawPlot(data, description) {
         return { x: jittered_x, y: jittered_y, customdata: custom_data };
     };
 
-    // 準備資料 Traces (不變)
+    // --- 準備圖層 (Traces) --- (不變)
     const boundaryTrace = {
-        type: 'heatmap', x: data.decision_boundary.xx[0],
-        y: data.decision_boundary.yy.map(row => row[0]),
-        z: data.decision_boundary.Z, colorscale: [['0.0', 'rgb(74, 110, 184)'], ['1.0', 'rgb(187, 85, 85)']],
-        zsmooth: false, showscale: false, opacity: 0.6,
-        name: '決策邊界', hoverinfo: 'skip'
+        type: 'heatmap',
+        x: data.decision_boundary.xx[0], // 1D X 軸
+        y: data.decision_boundary.yy.map(row => row[0]), // 1D Y 軸
+        z: data.decision_boundary.Z, // 2D Z 值
+        colorscale: [
+            ['0.0', 'rgb(74, 110, 184)'], // 藍色
+            ['1.0', 'rgb(187, 85, 85)']  // 紅色
+        ],
+        zsmooth: false, // <-- 確保是階梯狀
+        showscale: false,
+        hoverinfo: 'skip',
+        opacity: 0.6
     };
     const train_0 = filterAndJitterData(data.train_points, 0);
     const train_1 = filterAndJitterData(data.train_points, 1);
@@ -113,34 +119,44 @@ function drawPlot(data, description) {
     };
     const plotData = [boundaryTrace, traceTrain0, traceTrain1, traceTest0, traceTest1];
 
-    // 版面配置 (Layout) (不變)
+    // --- 【關鍵修正：版面配置】 ---
     const layout = {
-        title: `Logistic Regression 決策邊界<br>(使用 ${description.x1_feature} 和 ${description.x2_feature})`,
+        title: ` ${description.x1_feature} 、 ${description.x2_feature}`,
         xaxis: { title: description.x1_feature, zeroline: false },
         yaxis: { title: description.x2_feature, zeroline: false },
         hovermode: 'closest',
+
+        //
         legend: {
-            traceorder: 'normal', bgcolor: 'rgba(255,255,255,0.8)',
-            bordercolor: '#E2E2E2', borderwidth: 1
+            orientation: 'h',     // 'h' = 水平排列
+            yanchor: 'bottom',    // 錨點在圖例的「底部」
+            y: 1.02,              // <-- 【修正】 1.02 = 放在繪圖區的「正上方」
+            xanchor: 'center',    // 錨點在圖例的「中心」
+            x: 0.5,               // 位置在 X 軸 50% (中心)
+
+            // itemdoubleclick: false, // 禁用雙擊圖例項目
         },
-        margin: { t: 80, b: 60, l: 60, r: 30 }
+        // 
+        margin: {
+            t: 80, // top (保持 80, 為標題和新圖例騰出空間)
+            b: 60, // bottom (改回 60 即可)
+            l: 60, // left
+            r: 30  // right
+        }
     };
 
-    // --- 【關鍵修正】 ---
-    // 建立一個 config 物件來取代 displayModeBar: false
+    // 圖表互動設定 (不變)
     const config = {
         responsive: true,
-
-        // 移除您不想要的所有按鈕，只保留...
-        // 'autoScale2d' (還原縮放 - 小屋按鈕)
+        scrollZoom: false,  // 禁用滾輪縮放
         modeBarButtons: [
-            ['autoScale2d']
-            // 我們移除了: zoom2d, pan2d, zoomIn2d, zoomOut2d 等...
+            ['autoScale2d'] // 只保留「還原縮放」(小屋按鈕)
         ]
     };
 
     // 繪製圖表
-    Plotly.newPlot(chartDiv, plotData, layout, config); // <-- 最後一個參數改為 config
-
+    Plotly.newPlot(chartDiv, plotData, layout, config);
     chartDiv.classList.remove('loading');
+
+    // 更新模型資訊
 }

@@ -1,0 +1,249 @@
+/* --- 決策樹頁面 (decision_tree.css) --- */
+/* (這份 CSS 使用「正確」的 .legend-info 拼寫) */
+
+/* --- 1. 頁面主要佈局 --- */
+.logistic-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.page-header h1 {
+    color: #0B346E;
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.page-header .subtitle {
+    color: #666;
+    font-size: 1.1rem;
+}
+
+/* --- 2. 資訊卡片 (.info-card) --- */
+.info-card {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    border-left: 4px solid #667eea;
+}
+
+.info-card h3 {
+    color: #0B346E;
+    margin-bottom: 1rem;
+}
+
+.info-card p {
+    line-height: 1.8;
+    color: #333;
+    margin-bottom: 0.8rem;
+}
+
+.info-card .highlight {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
+    padding: 0.8rem 1rem;
+    border-radius: 5px;
+    border-left: 4px solid #ffc107;
+    margin-top: 1rem;
+    font-weight: 500;
+}
+
+/* --- 3. 圖例說明 (.legend-info) --- */
+/* 【注意】使用「正確」拼寫 */
+.legend-info {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e0e0;
+    margin-bottom: 2rem;
+}
+
+.legend-info h4 {
+    color: #0B346E;
+    margin-bottom: 1rem;
+}
+
+.legend-info ul {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 1rem;
+}
+
+.legend-info li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.legend-info .help-text {
+    color: #666;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+    font-style: italic;
+}
+
+/* 【注意】使用「正確」拼寫 */
+.legend-0-train,
+.legend-1-train {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    border: 1px solid #333;
+}
+
+.legend-0-train {
+    background-color: blue;
+}
+
+.legend-1-train {
+    background-color: red;
+}
+
+/* 【注意】使用「正確」拼寫 */
+.legend-0-test,
+.legend-1-test {
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 12px solid;
+    display: inline-block;
+    margin-left: 1px;
+    margin-right: 5px;
+    transform: translateY(2px);
+    border-top-color: transparent !important;
+}
+
+.legend-0-test {
+    border-bottom-color: blue;
+}
+
+.legend-1-test {
+    border-bottom-color: red;
+}
+
+/* --- 4. 圖表 & 讀取中 (.chart-container) --- */
+.chart-container {
+    width: 100%;
+    margin: 2rem 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #e0e0e0;
+}
+
+#plotly-chart {
+    width: 100%;
+    min-height: 550px;
+    background-color: #fcfcfc;
+}
+
+#plotly-chart.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.loading-text {
+    font-size: 1.1rem;
+    color: #555;
+    margin-top: 1rem;
+    font-weight: 500;
+}
+
+.loading-spinner {
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #0B346E;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.error-text {
+    color: #D8000C;
+    background-color: #FFD2D2;
+    padding: 1rem;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+/* --- 5. 評估指標 (.metrics-container) --- */
+.metrics-container {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.metrics-container h3 {
+    font-size: 1.8rem;
+    color: #0B346E;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.5rem;
+    text-align: center;
+}
+
+.metrics-card {
+    padding: 1.5rem;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    text-align: center;
+    border: 1px solid #e0e0e0;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.metrics-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+}
+
+.metrics-card h4 {
+    margin: 0 0 0.75rem 0;
+    font-size: 1rem;
+    color: #333;
+    font-weight: 600;
+}
+
+.metric-value {
+    font-size: 2.2rem;
+    font-weight: bold;
+    color: #0B346E;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+}
+
+.metric-description {
+    font-size: 0.85rem;
+    color: #666;
+    line-height: 1.4;
+    margin-top: auto;
+}
