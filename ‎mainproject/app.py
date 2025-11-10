@@ -1,16 +1,16 @@
-from flask import Flask, render_template, jsonify
-import pandas as pd# 載入 Pandas 讀取csv
+from flask import Flask, render_template, jsonify, Response # 【新】匯入 Response
+import pandas as pd
 import numpy as np
-import os # 確保檔案路徑正確
+import os
+import io # 【新】用於處理圖片 I/O
 
+# 【新】匯入決策樹和 Graphviz
+from sklearn.tree import DecisionTreeClassifier, export_graphviz
+import graphviz # 【新】匯入 Graphviz
 
-from sklearn.datasets import fetch_california_housing
-# 載入邏輯迴歸模型
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import r2_score, mean_squared_error,accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
-from sklearn.linear_model import LinearRegression
-
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 #---Flask 應用設定---
 app = Flask(__name__)
 
@@ -155,107 +155,66 @@ def logistic_data():
     except Exception as e:
         print(f"伺服器錯誤: {e}") 
         return jsonify({"success": False, "error": f"伺服器內部錯誤: {e}"}), 500
+    
 
-@app.route("/api/regression/data")
-def regression_data():
-    """線性迴歸 API - 使用加州房價資料集"""
-    try:  
 
-        # 載入加州房價資料集
-        housing = fetch_california_housing()
+# -----------------------------------------------------------------
+#     決策樹 API
+# -----------------------------------------------------------------
 
-        # 只使用前200筆資料作為展示
-        sample_size = 200
-        X_full = housing.data[:sample_size]
-        y_full = housing.target[:sample_size] #房價(單位:十萬美元)
+@app.route("/api/decision_tree/graph")
+def decision_tree_graph():
+    """
+    動態產生 Graphviz 樹狀結構圖 (SVG)
+    決策樹 API - 使用心臟衰竭資料集
+    """
+    try:
+        # 1. 載入資料
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        csv_path = os.path.join(base_dir, 'data', 'heart.csv')
+        qust_cleaned = pd.read_csv(csv_path)
 
-        # 使用**平均房間數**作為預測特徵(索引2)
-        feature_idx = 2
-        X = X_full[:,feature_idx].reshape(-1,1)
-        y = y_full * 10
+        target = '是否有心臟病'
+        feature_1 = 'ST 段斜率'
+        feature_2 = '運動是否誘發心絞痛'
+        
+        # 2. 100% 複製您的 Colab 流程
+        # (您的 Colab 決策樹只用了這 2 個特徵)
+        X_selected = qust_cleaned[[feature_1, feature_2]]
+        y = qust_cleaned[target]
+        
+        # 3. 分割 (使用您 Colab 的 test_size=0.3)
+        X_train, X_test, y_train, y_test = train_test_split(
+            X_selected, y, test_size=0.3, random_state=42
+        )
+        
+        # 4. 訓練 (使用您 Colab 的模型: DecisionTreeClassifier(random_state=42))
+        decision_tree_model = DecisionTreeClassifier(random_state=42)
+        decision_tree_model.fit(X_train, y_train) # 在 X_train 上訓練
 
-        # 分割訓練和測試資料(80/20)
-        X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.2,random_state=42)
-
-        # 訓練線性迴歸模型
-        model = LinearRegression()
-        model.fit(X_train, y_train)
-
-        # 預測
-        # 訓練資料的預測
-        y_train_pred = model.predict(X_train)
-
-        #測試資料的預測
-        y_test_pred = model.predict(X_test)
-
-        # 計算評估指標
-        r2 = r2_score(y_test, y_test_pred)
-        mse = mean_squared_error(y_test, y_test_pred)
-        rmse = np.sqrt(mse)
-
-        # 生成迴歸線資料(用於繪圖)
-        X_line = np.linspace(X.min(),X.max(), 100).reshape(-1,1)
-        y_line = model.predict(X_line)
-
-        # 準備回應資料
-        response = {
-            "success": True,
-            "data":{
-                "train":{
-                    "x": X_train.flatten().tolist(),
-                    "y": y_train.tolist(),
-                    "y_pred": y_train_pred.tolist()
-                },
-                "test":{
-                    "x": X_test.flatten().tolist(),
-                    "y": y_test.tolist(),
-                    "y_pred": y_test_pred.tolist()
-                },
-                "regression_line":{
-                    "x": X_line.flatten().tolist(),
-                    "y": y_line.tolist()
-                }        
-            },
-            "metrics":{
-                "r2_score": round(r2, 4),
-                "mse": round(mse, 2),
-                "rmse": round(rmse, 2),
-                "coefficient": round(model.coef_[0], 2),
-                "intercept": round(model.intercept_, 2)
-            },
-            "description":{
-                "dataset":"加州房價資料集",
-                "samples": len(y),
-                "train_size": len(y_train),
-                "test_size": len(y_test),
-                "feature_name": "平均房間數",
-                "feature_unit": "間",
-                "target_name": "房價",
-                "target_unit": "萬美元",
-                "info": "此資料集取自 1990 年加州人口普查資料"
-            }
-        }
-
-        return jsonify(response)
-    except Exception as e:
-        return jsonify(
-            {
-                "success": False,
-                "error": str(e)  
-            }, 500
+        # 5. 產生 Graphviz DOT data
+        dot_data = export_graphviz(
+            decision_tree_model, # 使用這個模型
+            out_file=None,
+            feature_names=X_selected.columns, # ['ST 段斜率', '運動是否誘發心絞痛']
+            class_names=['無心臟病', '有心臟病'], # 您的 Colab 設定
+            filled=True,
+            rounded=True,
+            special_characters=True
         )
 
-@app.route("/api/regression/predict")
-def regression_predict():
-    """線性迴歸預測 API - 根據房間數預測房價"""
-    response = {
-        "success": True,
-        "Prediction":{
-            "price": 100,
-            "unit": "萬美元"
-        }
-    }
-    return jsonify(response)
+        # 6. 使用 Graphviz 動態產生 SVG (在記憶體中)
+        graph = graphviz.Source(dot_data)
+        svg_data = graph.pipe(format='svg')
+
+        # 7. 回傳 SVG 圖片
+        return Response(svg_data, mimetype='image/svg+xml')
+
+    except Exception as e:
+        print(f"產生 Graphviz 錯誤: {e}")
+        # (檢查您的終端機是否有 'ExecutableNotFound: failed to execute "dot"')
+        return f"產生樹狀圖時發生錯誤: {e}", 500
+
 
 def main():
     """啟動應用（教學用：啟用 debug 模式）"""

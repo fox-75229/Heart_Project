@@ -1,134 +1,90 @@
 {% extends "base.html" %}
 
-{% block title %}職能發展學院-線性迴歸{% endblock %}
+{% block title %}職能發展學院-決策樹{% endblock %}
 
 {% block head %}
 {{super()}}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/regression.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/decision_tree.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="regression-container">
+<div class="logistic-container">
     <div class="page-header">
-        <h1>線性迴歸 (Linear Regression)</h1>
-        <p class="subtitle">使用加州房價資料集進行房價預測</p>
-    </div>2025/7/13 下午 06:01
+        <h1>決策樹 (Decision Tree)</h1>
+        <p class="subtitle">使用心臟衰竭資料集進行心臟病預測 </p>
+    </div>
 
-
-    <!-- 資料集說明 -->
     <div class="info-card">
-        <h3>關於資料集</h3>
-        <p><strong>加州房價資料集（California Housing Dataset）</strong>取自 1990 年加州人口普查資料，包含 200 個社區的房屋資訊。</p>
-        <p>本展示使用<strong>平均房間數</strong>來預測<strong>房價</strong>，讓你可以清楚看到線性迴歸如何找出特徵與目標值之間的線性關係。</p>
-        <p class="highlight">💡 <strong>互動提示</strong>：在下方輸入房間數，或點選圖表上的資料點，即可看到預測房價！</p>
+        <h3>關於決策樹</h3>
+        <p>
+            決策樹 (Decision Tree) 是一種直觀的機器學習模型，它模仿人類做決策的過程。
+        </p>
+        <p>
+            它會學習一系列的「是/否」問題（例如：`ST 段斜率` > 1.5 嗎？ `運動是否誘發心絞痛` == 1 嗎？），並像**流程圖**一樣將資料層層分類。
+        </p>
+        <p>
+            本分析同樣使用來自 Kaggle 的「心臟衰竭預測資料集」（已清理，共 692 筆）來訓練模型。
+        </p>
+        <p class="highlight">
+            🎯 <strong>提示</strong>：下方圖表將展示決策樹如何使用「<strong>水平和垂直線</strong>」將資料切割成不同的預測方塊（這與邏輯迴歸的平滑斜線不同）。
+        </p>
     </div>
 
-    <!-- 預測工具 -->
-    <div class="prediction-panel">
-        <h3>🏠 房價預測器</h3>
-        <div class="prediction-controls">
-            <div class="input-group">
-                <label for="rooms-input">輸入房間數：</label>
-                <input type="number" id="rooms-input" min="1" max="15" step="0.1" value="5.0" class="number-input">
-                <span class="unit">間</span>
-            </div>
-            <button id="predict-btn" class="btn-predict">預測房價</button>
-        </div>
-        <div id="prediction-result" class="prediction-result">
-            <div class="result-item">
-                <span class="result-label">預測房價：</span>
-                <span class="result-value" id="predicted-price">--</span>
-                <span class="result-unit">萬美元</span>
-            </div>
-            <div class="result-formula" id="formula-display"></div>
-        </div>
+    <div class="legeng-info">
+        <h4>圖表說明</h4>
+        <ul>
+            <li><span class="legeng-0-train"></span>無心臟病(訓練)</li>
+            <li><span class="legeng-1-train"></span>有心臟病(訓練)</li>
+            <li><span class="legeng-0-test"></span>無心臟病(測試)</li>
+            <li><span class="legeng-1-test"></span>有心臟病(測試)</li>
+        </ul>
+        <p class="help-text">圖表背景 (紅/藍) 代表模型的決策區域。您可以縮放或懸停</p>
     </div>
 
-    <!-- 控制面板 -->
-    <div class="control-panel">
-        <div id="loading" class="loading">
-            <div class="spinner"></div>
-            <p>載入中...</p>
-        </div>
-    </div>
-
-    <!-- 圖表區域 -->
     <div class="chart-container">
-        <canvas id="regressionChart"></canvas>
-        
-
+        <div id="plotly-chart">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">正在從伺服器載入並訓練模型...</p>
+        </div>
     </div>
 
-    <!-- 評估指標 -->
     <div class="metrics-container">
         <h3>模型評估指標</h3>
         <div class="metrics-grid">
-            <div class="metric-card">
-                <div class="metric-label">R² 分數</div>
-                <div class="metric-value" id="r2-score">--</div>
-                <div class="metric-description">決定係數，越接近 1 表示模型越好</div>
+            <div class="metrics-card">
+                <h4>準確率</h4>
+                <div id="metrics-accuracy" class="metric-value">--</div>
+                <div class="metric-description">模型預測正確的比例</div>
             </div>
-            <div class="metric-card">
-                <div class="metric-label">均方誤差 (MSE)</div>
-                <div class="metric-value" id="mse">--</div>
-                <div class="metric-description">預測值與實際值的平均誤差平方</div>
+            <div class="metrics-card">
+                <h4>精確率</h4>
+                <div id="metrics-precision" class="metric-value">--</div>
+                <div class="metric-description">預測為正樣本中實際為正的比例</div>
             </div>
-            <div class="metric-card">
-                <div class="metric-label">均方根誤差 (RMSE)</div>
-                <div class="metric-value" id="rmse">--</div>
-                <div class="metric-description">MSE 的平方根，與目標值同單位</div>
+            <div class="metrics-card">
+                <h4>召回率</h4>
+                <div id="metrics-recall" class="metric-value">--</div>
+                <div class="metric-description">實際正樣本中被正確預測的比例</div>
             </div>
-            <div class="metric-card">
-                <div class="metric-label">迴歸係數</div>
-                <div class="metric-value" id="coefficient">--</div>
-                <div class="metric-description">特徵的權重（斜率）</div>
+            <div class="metrics-card">
+                <h4>F1 Score</h4>
+                <div id="metrics-f1" class="metric-value">--</div>
+                <div class="metric-description">精確率與召回率的綜合表現</div>
             </div>
-        </div>
-    </div>
-
-    <!-- 模型資訊 -->
-    <div class="model-info">
-        <h3>模型資訊</h3>
-        <div class="info-grid">
-            <div class="info-item">
-                <span class="info-label">資料集：</span>
-                <span class="info-value" id="dataset-name">--</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">總樣本數：</span>
-                <span class="info-value" id="total-samples">--</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">訓練集大小：</span>
-                <span class="info-value" id="train-size">--</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">測試集大小：</span>
-                <span class="info-value" id="test-size">--</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">預測目標：</span>
-                <span class="info-value" id="target-name">--</span>
+            <div class="metrics-card">
+                <h4>AUC 值</h4>
+                <div id="metrics-auc" class="metric-value">--</div>
+                <div class="metric-description">ROC 曲線下的面積，越大越好</div>
             </div>
         </div>
     </div>
-    
-    <!-- 圖例說明 -->
-    <div class="legend-info">
-        <h4>圖表說明</h4>
-        <ul>
-            <li><span class="legend-dot train"></span> 訓練資料點</li>
-            <li><span class="legend-dot test"></span> 測試資料點</li>
-            <li><span class="legend-line"></span> 線性迴歸線</li>
-        </ul>
-        <p class="help-text">將滑鼠移到資料點上可以看到詳細資訊</p>
-    </div>
-    
 
 </div>
 {% endblock %}
 
-{% block code %}
-<script src="{{ url_for('static',filename='vendor/chart.js/chart.umd.js') }}"></script>
-<script src="{{ url_for('static', filename='js/regression.js') }}"></script>
+
+{% block scripts %}
+{{super()}}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="{{ url_for('static', filename='js/decision_tree.js') }}"></script>
 {% endblock %}
