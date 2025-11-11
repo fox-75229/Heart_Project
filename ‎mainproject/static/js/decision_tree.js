@@ -136,6 +136,31 @@ function drawPlot(data, description) {
     chartDiv.classList.remove('loading');
 }
 
+//=====================================================================
+//=====================================================================
+//=====================================================================
+function injectGraphvizCSS() {
+    const chartDiv = document.getElementById('graphviz-chart');
+    const svg = chartDiv.querySelector('svg');
+    if (svg) {
+        // 建立 <style> 標籤
+        const style = document.createElementNS("http://www.w3.org/2000/svg", "style");
+        style.textContent = `
+            .node {
+                cursor: pointer;
+             transition: transform 0.25s ease, filter 0.25s ease;
+                transform-origin: center;
+            }
+            .node:hover {
+                transform: translateY(-0.5px) scale(1.005);
+                filter: drop-shadow(0 2px 6px rgba(11, 52, 110, 0.5));
+            }
+        `;
+
+        svg.appendChild(style);
+        
+    }
+}
 // 5. 載入 Graphviz SVG 樹狀圖
 async function loadGraphviz() {
     const chartDiv = document.getElementById('graphviz-chart');
@@ -145,6 +170,7 @@ async function loadGraphviz() {
         if (!response.ok) throw new Error('載入失敗');
         const svg = await response.text();
         chartDiv.innerHTML = svg;
+        injectGraphvizCSS(); // 新增這行
     } catch (error) {
         chartDiv.innerHTML = `<span style="color:red;">❌ 載入失敗: ${error.message}</span>`;
     }

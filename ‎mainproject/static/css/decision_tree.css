@@ -247,3 +247,18 @@
     line-height: 1.4;
     margin-top: auto;
 }
+
+/*===============================================================*/
+/*===============================================================*/
+/*===============================================================*/
+/* graphviz 圖表框框浮動*/
+.node {
+    cursor: pointer;
+    transition: transform 0.25s ease, filter 0.25s ease;
+    transform-origin: center;
+}
+
+.node:hover {
+    transform: translateY(-0.5px) scale(1.005);
+    filter: drop-shadow(0 2px 6px rgba(11, 52, 110, 0.5));
+}
