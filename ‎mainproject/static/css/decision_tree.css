@@ -1,5 +1,5 @@
 /* --- 決策樹頁面 (decision_tree.css) --- */
-/* (這份 CSS 使用「正確」的 .legend-info 拼寫) */
+/* (簡化版：只保留 資訊卡、樹狀圖、指標卡、模型資訊) */
 
 /* --- 1. 頁面主要佈局 --- */
 .logistic-container {
@@ -53,145 +53,7 @@
     font-weight: 500;
 }
 
-/* --- 3. 圖例說明 (.legend-info) --- */
-/* 【注意】使用「正確」拼寫 */
-.legend-info {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e0e0e0;
-    margin-bottom: 2rem;
-}
-
-.legend-info h4 {
-    color: #0B346E;
-    margin-bottom: 1rem;
-}
-
-.legend-info ul {
-    list-style: none;
-    padding: 0;
-    margin-bottom: 1rem;
-}
-
-.legend-info li {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
-}
-
-.legend-info .help-text {
-    color: #666;
-    font-size: 0.9rem;
-    margin-top: 1rem;
-    font-style: italic;
-}
-
-/* 【注意】使用「正確」拼寫 */
-.legend-0-train,
-.legend-1-train {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    display: inline-block;
-    border: 1px solid #333;
-}
-
-.legend-0-train {
-    background-color: blue;
-}
-
-.legend-1-train {
-    background-color: red;
-}
-
-/* 【注意】使用「正確」拼寫 */
-.legend-0-test,
-.legend-1-test {
-    width: 0;
-    height: 0;
-    border-left: 6px solid transparent;
-    border-right: 6px solid transparent;
-    border-bottom: 12px solid;
-    display: inline-block;
-    margin-left: 1px;
-    margin-right: 5px;
-    transform: translateY(2px);
-    border-top-color: transparent !important;
-}
-
-.legend-0-test {
-    border-bottom-color: blue;
-}
-
-.legend-1-test {
-    border-bottom-color: red;
-}
-
-
-
-/* --- 4. 圖表 & 讀取中 (.chart-container) --- */
-.chart-container {
-    width: 100%;
-    margin: 2rem 0;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    border-radius: 10px;
-    overflow: hidden;
-    border: 1px solid #e0e0e0;
-}
-
-#graphviz-chart {
-    width: 100%;
-    min-height: 550px;
-    background-color: #fcfcfc;
-}
-
-#graphviz-chart.loading {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-}
-
-.loading-text {
-    font-size: 1.1rem;
-    color: #555;
-    margin-top: 1rem;
-    font-weight: 500;
-}
-
-.loading-spinner {
-    border: 5px solid #f3f3f3;
-    border-top: 5px solid #0B346E;
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
-}
-
-.error-text {
-    color: #D8000C;
-    background-color: #FFD2D2;
-    padding: 1rem;
-    border-radius: 8px;
-    font-weight: 500;
-}
-
-/* --- 8. 【新】樹狀圖圖例 --- */
-/* (請將這段「添加」到 decision_tree.css 的最下方) */
-
+/* --- 3. 【新】樹狀圖圖例 --- */
 .tree-legend {
     background: #fdfdfd;
     padding: 1.5rem;
@@ -204,7 +66,6 @@
 .tree-legend h4 {
     color: #0B346E;
     margin-bottom: 1.5rem;
-    /* (修正 margin) */
     text-align: center;
     font-size: 1.5rem;
     font-weight: 600;
@@ -216,7 +77,6 @@
     gap: 2rem;
     margin-bottom: 1rem;
     flex-wrap: wrap;
-    /* (允許換行) */
 }
 
 .tree-legend .legend-item {
@@ -233,17 +93,16 @@
 }
 
 /* (Graphviz 預設的 0/1 顏色) */
-/* (注意：這可能與您 Colab 上的顏色不同，請自行檢查) */
 .tree-legend .color-class-0 {
     background-color: #ff9e49;
 }
 
-/* 橘色 (通常是 Class 0) */
+/* 橘色 (無心臟病) */
 .tree-legend .color-class-1 {
     background-color: #397ef7;
 }
 
-/* 藍色 (通常是 Class 1) */
+/* 藍色 (有心臟病) */
 
 .tree-legend .legend-text {
     list-style: none;
@@ -260,6 +119,51 @@
     line-height: 1.6;
 }
 
+/* --- 4. 【核心】樹狀圖容器樣式 --- */
+.tree-container {
+    background: #ffffff;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e0e0e0;
+    margin-bottom: 2rem;
+}
+
+.tree-container h3 {
+    color: #0B346E;
+    margin-bottom: 1.5rem;
+    font-size: 1.8rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* 樹狀圖 SVG 的容器 */
+#graphviz-chart {
+    width: 100%;
+    min-height: 300px;
+    /* 最小高度 */
+    background-color: #fcfcfc;
+    overflow-x: auto;
+    /* 如果樹太寬，允許水平捲動 */
+    padding: 1rem;
+    box-sizing: border-box;
+}
+
+/* 樹狀圖 SVG 圖片本身 */
+#graphviz-chart svg {
+    display: block;
+    margin: 0 auto;
+    max-width: none !important;
+    /* 確保 SVG 可以大於容器 (才能捲動) */
+}
+
+/* 樹狀圖的讀取中動畫 */
+#graphviz-chart.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
 
 /* --- 5. 評估指標 (.metrics-container) --- */
 .metrics-container {
@@ -322,17 +226,88 @@
     margin-top: auto;
 }
 
-/*===============================================================*/
-/*===============================================================*/
-/*===============================================================*/
-/* graphviz 圖表框框浮動*/
-.node {
-    cursor: pointer;
-    transition: transform 0.25s ease, filter 0.25s ease;
-    transform-origin: center;
+/* --- 6. 模型資訊 (.model-info) --- */
+.model-info {
+    background: #f8f9fa;
+    padding: 2rem;
+    border-radius: 10px;
+    margin-top: 2rem;
+    border-left: 4px solid #0B346E;
 }
 
-.node:hover {
-    transform: translateY(-0.5px) scale(1.005);
-    filter: drop-shadow(0 2px 6px rgba(11, 52, 110, 0.5));
+.model-info h3 {
+    color: #0B346E;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-size: 1.8rem;
 }
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.info-item{
+    background: #fff;
+    padding: 1rem;
+    border-radius: 5px;
+    border: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+}
+
+
+.info-label {
+    font-weight: 600;
+    color: #333;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.info-value {
+    font-weight: 400;
+    color: #0B346E;
+    font-size: 1.1rem;
+    word-break: break-all;
+}
+
+/* --- 7. 讀取中 & 錯誤 (共用) --- */
+.loading-text {
+    font-size: 1.1rem;
+    color: #555;
+    margin-top: 1rem;
+    font-weight: 500;
+}
+
+.loading-spinner {
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #0B346E;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.error-text {
+    color: #D8000C;
+    background-color: #FFD2D2;
+    padding: 1rem;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+/* --- 8. SVG 節點浮動特效 (不變) --- */
+/* (這會被 JS 注入到 SVG 中) */
+/* .node { ... } */
+/* .node:hover { ... } */

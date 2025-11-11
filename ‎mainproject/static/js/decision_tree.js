@@ -18,9 +18,10 @@ async function loadData() {
         const result = await response.json();
         if (result.success) {
             updateMetrics(result.metrics); // 更新指標
+            updateModelInfo(result.description); // <--- 新增這行，填充模型詳細資訊
             if (result.data) {
                 drawPlot(result.data, result.description); // 只有有 data 才畫圖
-            }   
+            }
             if (loadingSpinner) loadingSpinner.remove();
             if (loadingText) loadingText.remove();
         } else {
@@ -39,6 +40,17 @@ function updateMetrics(metrics) {
     document.getElementById('metrics-recall').textContent = metrics.recall;
     document.getElementById('metrics-f1').textContent = metrics.f1;
     document.getElementById('metrics-auc').textContent = metrics.auc;
+}
+
+// 填充「模型資訊」
+function updateModelInfo(description) {
+    document.getElementById('desc-dataset').textContent = description.dataset;
+    document.getElementById('desc-total-samples').textContent = description.total_samples;
+    document.getElementById('desc-train-size').textContent = description.train_size;
+    document.getElementById('desc-test-size').textContent = description.test_size;
+    document.getElementById('desc-target').textContent = description.target;
+    // 將陣列轉為字串
+    document.getElementById('desc-features').textContent = description.selected_features.join(', ');
 }
 
 // 4. 使用 Plotly 繪製決策邊界圖
@@ -166,4 +178,4 @@ async function loadGraphviz() {
     } catch (error) {
         chartDiv.innerHTML = `<span style="color:red;">❌ 載入失敗: ${error.message}</span>`;
     }
-}
+}   
