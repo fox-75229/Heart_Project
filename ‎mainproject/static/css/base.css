@@ -1,3 +1,12 @@
+:root {
+    --primary-color: #4E4F97;
+    --primary-color-darker: #3E3F7A;
+    --text-color-light: #ffffff;
+    --nav-hover-bg: rgba(255, 255, 255, 0.1);
+    --nav-hover-bg-darker: rgba(255, 255, 255, 0.2);
+    --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
 /* 重置樣式 */
 * {
     margin: 0;
@@ -7,7 +16,7 @@
 
 /* 基本樣式 */
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Arial', sans-serif;
     line-height: 1.6;
 }
 
@@ -20,12 +29,12 @@ body {
 
 /* 導覽列 */
 .navbar {
-    background-color: #0B346E;
+    background-color: var(--primary-color);
     padding: 0.5rem 1rem;
     position: sticky;
     top: 0;
     z-index: 1000;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px var(--shadow-color);
 }
 
 .navbar .container {
@@ -38,7 +47,7 @@ body {
 }
 
 .navbar-brand {
-    color: white;
+    color: var(--text-color-light);
     text-decoration: none;
     font-size: 1.25rem;
     font-weight: bold;
@@ -55,7 +64,7 @@ body {
 }
 
 .nav-item a {
-    color: white;
+    color: var(--text-color-light);
     text-decoration: none;
     padding: 0.5rem 1rem;
     border-radius: 4px;
@@ -65,7 +74,7 @@ body {
 
 .nav-item a:hover,
 .nav-item a.active {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--nav-hover-bg);
 }
 
 /* 漢堡選單按鈕 */
@@ -77,7 +86,7 @@ body {
     border: none;
     cursor: pointer;
     padding: 0.5rem;
-    z-index: 60;
+    z-index: 1010; /* Higher than navbar content */
 }
 
 .hamburger-icon {
@@ -86,8 +95,8 @@ body {
 }
 
 .hamburger-icon .line {
-    fill: #ffffff;
-    transition: transform 0.3s ease;
+    fill: var(--text-color-light);
+    transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
 /* 漢堡選單按鈕動畫 */
@@ -108,18 +117,16 @@ main {
     padding: 2rem 0;
 }
 
-
-
 /* 頁尾 */
 footer {
-    background-color: #0B346E;
-    color: white;
+    background-color: var(--primary-color);
+    color: var(--text-color-light);
     text-align: center;
     padding: 1rem;
     margin-top: 2rem;
 }
 
-/* 響應式設計 - 平板 */
+/* 響應式設計 - 平板與手機 */
 @media (max-width: 768px) {
     .row {
         flex-direction: column;
@@ -128,13 +135,6 @@ footer {
     .col-main,
     .col-sidebar {
         width: 100%;
-    }
-}
-
-/* 響應式設計 - 手機 */
-@media (max-width: 768px) {
-    .navbar {
-        padding: 0.5rem 1rem;
     }
 
     .navbar .container {
@@ -147,14 +147,14 @@ footer {
         top: 50%;
         right: 1rem;
         transform: translateY(-50%);
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: var(--nav-hover-bg);
         border-radius: 8px;
         padding: 0.5rem;
         transition: background-color 0.3s ease;
     }
 
     .nav-toggle:hover {
-        background-color: rgba(255, 255, 255, 0.2);
+        background-color: var(--nav-hover-bg-darker);
     }
 
     .hamburger-icon {
@@ -163,19 +163,19 @@ footer {
     }
 
     .nav-list {
-        display: none !important;
+        display: none !important; /* Use important to override inline styles if any */
         position: absolute;
         top: 100%;
         left: 0;
         right: 0;
-        background-color: #0B346E;
+        background-color: var(--primary-color);
         flex-direction: column;
         padding: 0.5rem 0;
         gap: 0;
         margin-top: 0.5rem;
         border-radius: 0 0 8px 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        z-index: 50;
+        box-shadow: 0 4px 6px var(--shadow-color);
+        z-index: 1005; /* Below the toggle button but above other content */
     }
 
     .nav-list.open {
