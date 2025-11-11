@@ -17,18 +17,20 @@
 
 
     <div class="info-card">
-        <h3>關於資料集</h3>
+        <h3>關於邏輯迴歸</h3>
         <p>
-            心血管疾病 (CVD) 是全球首要死因，每年約奪去 1,790 萬人的生命。對於心血管高風險族群，早期發現和管理至關重要。
+            邏輯迴歸 (Logistic Regression) 是一種常見的分類模型，它透過數學函數來預測樣本屬於某類的機率。
         </p>
         <p>
-            本分析使用來自 <strong>Kaggle 的「心臟衰竭預測資料集」</strong> 共包含 <strong>918 筆</strong>觀測資料與
-            <strong>12項</strong>關鍵臨床特徵（如胸痛類型、最大心率、膽固醇等）。
+            模型會在資料中找到一條「最佳分界線」，用來區分不同類別（例如：有無心臟病）。這條線代表模型學到的「決策邏輯」，能讓我們一眼看出模型如何分類。
         </p>
         <p class="highlight">
-            🎯 <strong>提示</strong>：下方圖表將展示「<strong>ST 段斜率</strong>」(X 軸) 與「<strong>運動是否誘發心絞痛</strong>」(Y 軸) 如何劃分模型的決策邊界。
+            🎯
+            <strong>提示</strong>：下方圖表將展示模型如何以一條<strong>線性邊界</strong>區分「<strong>有病</strong>」與「<strong>沒病</strong>」，並可觀察模型做對與做錯的情形。
         </p>
     </div>
+    
+
 
     <div class="legeng-info">
         <h4>圖例說明</h4>
@@ -74,7 +76,7 @@
             <div class="metrics-card">
                 <h4>AUC 值</h4>
                 <div id="metrics-auc" class="metric-value">--</div>
-                <div class="metric-description">ROC 曲線下的面積，越大越好</div>
+                <div class="metric-description">ROC 曲線下的面積，越接近1越好</div>
             </div>
         </div>
     </div>
