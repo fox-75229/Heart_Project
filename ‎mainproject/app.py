@@ -234,7 +234,8 @@ def decision_tree_graph():
 # --- 啟動應用 ---
 def main():
     """啟動應用（教學用：啟用 debug 模式）"""
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True)
+    # app.run(debug= True, host='0.0.0.0', port=5000)
 
 if __name__ == "__main__":
     main()

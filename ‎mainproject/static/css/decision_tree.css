@@ -140,13 +140,13 @@
     border: 1px solid #e0e0e0;
 }
 
-#plotly-chart {
+#graphviz-chart {
     width: 100%;
     min-height: 550px;
     background-color: #fcfcfc;
 }
 
-#plotly-chart.loading {
+#graphviz-chart.loading {
     display: flex;
     justify-content: center;
     align-items: center;
