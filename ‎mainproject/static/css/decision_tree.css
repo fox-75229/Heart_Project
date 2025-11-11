@@ -130,6 +130,8 @@
     border-bottom-color: red;
 }
 
+
+
 /* --- 4. 圖表 & 讀取中 (.chart-container) --- */
 .chart-container {
     width: 100%;
@@ -186,6 +188,78 @@
     border-radius: 8px;
     font-weight: 500;
 }
+
+/* --- 8. 【新】樹狀圖圖例 --- */
+/* (請將這段「添加」到 decision_tree.css 的最下方) */
+
+.tree-legend {
+    background: #fdfdfd;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+    border: 1px solid #e0e0e0;
+    margin-bottom: 2rem;
+}
+
+.tree-legend h4 {
+    color: #0B346E;
+    margin-bottom: 1.5rem;
+    /* (修正 margin) */
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.tree-legend .legend-grid {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    /* (允許換行) */
+}
+
+.tree-legend .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.tree-legend .legend-box {
+    width: 20px;
+    height: 20px;
+    border: 1px solid #555;
+    border-radius: 4px;
+}
+
+/* (Graphviz 預設的 0/1 顏色) */
+/* (注意：這可能與您 Colab 上的顏色不同，請自行檢查) */
+.tree-legend .color-class-0 {
+    background-color: #ff9e49;
+}
+
+/* 橘色 (通常是 Class 0) */
+.tree-legend .color-class-1 {
+    background-color: #397ef7;
+}
+
+/* 藍色 (通常是 Class 1) */
+
+.tree-legend .legend-text {
+    list-style: none;
+    padding-left: 20px;
+    text-align: left;
+    margin: 0 auto;
+    max-width: 400px;
+    /* 讓文字置中 */
+}
+
+.tree-legend .legend-text li {
+    color: #333;
+    margin-bottom: 0.5rem;
+    line-height: 1.6;
+}
+
 
 /* --- 5. 評估指標 (.metrics-container) --- */
 .metrics-container {

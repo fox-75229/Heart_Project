@@ -1,13 +1,4 @@
-/**
- * static/js/decision_tree.js
- * * (這是 logistic.js v8 的複製品, 只是 API 路徑不同)
- * 1. 呼叫 API (/api/decision_tree/data)
- * 2. 更新指標卡
- * 3. 繪製 Plotly 決策邊界圖 (Heatmap + Scatter)
- */
 
-// 1. 頁面載入完成後，執行 loadData 與 loadGraphviz
-// 這裡同時載入 Plotly 圖表與 Graphviz 樹狀圖
 
 document.addEventListener("DOMContentLoaded", () => {
     loadData();      // 載入決策邊界圖與指標
@@ -16,7 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // 2. 呼叫 API，取得圖表和指標資料
 async function loadData() {
-    const chartDiv = document.getElementById('plotly-chart');
+    const chartDiv = document.getElementById('graphviz-chart');
     const loadingSpinner = chartDiv.querySelector('.loading-spinner');
     const loadingText = chartDiv.querySelector('.loading-text');
     try {
@@ -27,7 +18,9 @@ async function loadData() {
         const result = await response.json();
         if (result.success) {
             updateMetrics(result.metrics); // 更新指標
-            drawPlot(result.data, result.description); // 繪製 Plotly 決策邊界圖
+            if (result.data) {
+                drawPlot(result.data, result.description); // 只有有 data 才畫圖
+            }   
             if (loadingSpinner) loadingSpinner.remove();
             if (loadingText) loadingText.remove();
         } else {
@@ -50,7 +43,7 @@ function updateMetrics(metrics) {
 
 // 4. 使用 Plotly 繪製決策邊界圖
 function drawPlot(data, description) {
-    const chartDiv = document.getElementById('plotly-chart');
+    const chartDiv = document.getElementById('graphviz-chart');
     const JITTER_AMOUNT = 0.15;
     const filterAndJitterData = (points, y_val) => {
         const jittered_x = [];
@@ -136,9 +129,8 @@ function drawPlot(data, description) {
     chartDiv.classList.remove('loading');
 }
 
-//=====================================================================
-//=====================================================================
-//=====================================================================
+
+// 4. 注入自訂的 CSS 到 Graphviz SVG 中
 function injectGraphvizCSS() {
     const chartDiv = document.getElementById('graphviz-chart');
     const svg = chartDiv.querySelector('svg');
@@ -158,7 +150,7 @@ function injectGraphvizCSS() {
         `;
 
         svg.appendChild(style);
-        
+
     }
 }
 // 5. 載入 Graphviz SVG 樹狀圖

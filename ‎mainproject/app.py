@@ -11,13 +11,19 @@ import graphviz # 匯入 Graphviz
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
+from sklearn.metrics import classification_report, confusion_matrix, roc_curve, auc
+from sklearn.model_selection import GridSearchCV
 #---Flask 應用設定---
 app = Flask(__name__)
 
 # 自定義JSON序列化設定
 app.json.ensure_ascii = False
 
+# --- 【新】建立一個全域快取 (Cache) ---
+# 我們將在這裡儲存訓練好的決策樹模型和指標
+dt_cache = {}
 
+# --- 網頁路由 ---
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -38,7 +44,7 @@ def logistic():
 
 @app.route("/api/logistic/data")
 def logistic_data():
-    """邏輯迴歸 API - 2D 邊界圖 + 高分指標"""
+    """邏輯迴歸 API (不變)"""
     try:
         # (您的邏輯迴歸程式碼... 為了版面整潔，此處省略)
         # 1. 載入「已清理」的資料
@@ -116,114 +122,128 @@ def logistic_data():
     
 
 # -----------------------------------------------------------------
-#     決策樹 API
+#     決策樹 API (已優化效能)
 # -----------------------------------------------------------------
 
-# 【新】API 1: 專門用來計算「指標」
+def get_decision_tree_results():
+    """
+    【新】這是一個內部函式，負責訓練模型並快取結果。
+    它只會在伺服器啟動後的「第一次」呼叫時執行。
+    """
+    # 檢查全域快取
+    if "best_model" in dt_cache:
+        # 如果快取中已有資料，直接回傳
+        return dt_cache
+
+    print("--- 正在訓練決策樹模型 (GridSearchCV)，請稍候... ---")
+    
+    # --- 執行一次您完整的 Colab 流程 ---
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    csv_path = os.path.join(base_dir, 'data', 'heart.csv')
+    qust_cleaned = pd.read_csv(csv_path)
+
+    target = '是否有心臟病'
+    y = qust_cleaned[target]
+    # 1. 特徵選取
+    corr_matrix = qust_cleaned.corr()
+    corr_with_target = corr_matrix[target].abs().sort_values(ascending=False)
+    selected_features = [f for f in corr_with_target.index if f != target and corr_with_target[f] >= 0.54]
+    X_selected = qust_cleaned[selected_features]
+
+    # 2. 資料分割
+    X_train, X_test, y_train, y_test = train_test_split(X_selected, y, test_size=0.3, random_state=42)
+
+    # 3. 決策樹調參 (GridSearchCV)
+    param_grid = {
+        'max_depth': [3, 5, 7, 10, None],
+        'min_samples_split': [2, 5, 10],
+        'min_samples_leaf': [1, 2, 4]
+    }
+    dt_model = DecisionTreeClassifier(random_state=42)
+    grid_search = GridSearchCV(dt_model, param_grid, cv=5, scoring='accuracy')
+    grid_search.fit(X_train, y_train)
+    best_dt_model = grid_search.best_estimator_
+
+    # 4. 評估
+    y_pred = best_dt_model.predict(X_test)
+    y_pred_proba = best_dt_model.predict_proba(X_test)[:, 1]
+    accuracy = accuracy_score(y_test, y_pred)
+    report = classification_report(y_test, y_pred, output_dict=True)
+    auc_score = roc_auc_score(y_test, y_pred_proba)
+    metrics = {
+        "accuracy": round(accuracy, 4),
+        "precision": round(report['weighted avg']['precision'], 4),
+        "recall": round(report['weighted avg']['recall'], 4),
+        "f1": round(report['weighted avg']['f1-score'], 4),
+        "auc": round(auc_score, 4)
+    }
+    
+    # 5. 產生 DOT data (用於 Graphviz)
+    dot_data = export_graphviz(
+        best_dt_model,
+        out_file=None,
+        feature_names=X_selected.columns,
+        class_names=['無心臟病', '有心臟病'],
+        filled=True,
+        rounded=True,
+        special_characters=True
+    )
+    
+    # 6. 儲存所有結果到快取中
+    dt_cache["best_model"] = best_dt_model
+    dt_cache["metrics"] = metrics
+    dt_cache["dot_data"] = dot_data
+    dt_cache["description"] = {
+        "dataset": "心臟衰竭預測資料集 (已清理)",
+        "selected_features": selected_features,
+        "train_size": len(X_train),
+        "test_size": len(X_test),
+        "total_samples": len(qust_cleaned),
+        "target": target,
+        "best_params": grid_search.best_params_
+    }
+    
+    print("--- 決策樹模型訓練完畢並已快取！ ---")
+    return dt_cache
+
+
 @app.route("/api/decision_tree/data")
 def decision_tree_data():
     """
-    決策樹 API - 僅提供「評估指標」
-    (此 API 匹配 /api/decision_tree/graph 的模型)
+    【已優化】決策樹 API - 僅提供「評估指標」
     """
     try:
-        # 1. 載入資料 (與 graph API 相同的邏輯)
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        csv_path = os.path.join(base_dir, 'data', 'heart.csv')
-        qust_cleaned = pd.read_csv(csv_path)
-
-        target = '是否有心臟病'
-        feature_1 = 'ST 段斜率'
-        feature_2 = '運動是否誘發心絞痛'
+        # 從快取中取得 results (如果快取為空, get_decision_tree_results 會自動訓練)
+        results = get_decision_tree_results()
         
-        # 2. 100% 複製 Colab 流程 (只用 2 特徵)
-        X_selected = qust_cleaned[[feature_1, feature_2]]
-        y = qust_cleaned[target]
-        
-        # 3. 分割 (與 graph API 相同的邏輯)
-        X_train, X_test, y_train, y_test = train_test_split(
-            X_selected, y, test_size=0.3, random_state=42, stratify=y
-        )
-        
-        # 4. 訓練 (與 graph API 相同的模型)
-        decision_tree_model = DecisionTreeClassifier(random_state=42)
-        decision_tree_model.fit(X_train, y_train)
-
-        # 5. [A 部分] 計算「評估指標」
-        y_pred_class = decision_tree_model.predict(X_test)
-        y_pred_proba = decision_tree_model.predict_proba(X_test)[:, 1]
-
-        metrics = {
-            "accuracy": round(accuracy_score(y_test, y_pred_class), 4),
-            "precision": round(precision_score(y_test, y_pred_class), 4),
-            "recall": round(recall_score(y_test, y_pred_class), 4),
-            "f1": round(f1_score(y_test, y_pred_class), 4),
-            "auc": round(roc_auc_score(y_test, y_pred_proba), 4)
-        }
-        
-        # 6. 【已刪除】 刪除所有 2D 邊界圖 (Plotly) 的計算
-        
-        # 7. 回傳「簡化」的 JSON (只包含 metrics)
+        # 直接回傳快取中的資料
         response = {
             "success": True,
-            # 【已刪除】 data: {} 區塊
-            "metrics": metrics,
-            "description": {
-                "info": "指標是基於 2-Feature 決策樹模型計算的。"
-            }
+            "metrics": results["metrics"],
+            "description": results["description"]
         }
         return jsonify(response)
-
-    # 錯誤處理
-    except FileNotFoundError as e:
-        print(f"檔案錯誤: {e}")
-        return jsonify({"success": False, "error": str(e)}), 404
-    except KeyError as e:
-        print(f"欄位錯誤: {e}")
-        return jsonify({"success": False, "error": f"CSV 欄位錯誤: {e}"}), 400
     except Exception as e:
-        print(f"伺服器錯誤: {e}") 
-        return jsonify({"success": False, "error": f"伺服器內部錯誤: {e}"}), 500
+        print(f"API 錯誤 (/data): {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
-# 【保留】API 2: 專門用來產生「樹狀圖」
 @app.route("/api/decision_tree/graph")
 def decision_tree_graph():
     """
-    動態產生 Graphviz 樹狀結構圖 (SVG)
+    【已優化】動態產生 Graphviz 樹狀結構圖 (SVG)
     """
     try:
-        # ( ... 您的 Graphviz 程式碼 ... )
-        # 1. 載入資料
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        csv_path = os.path.join(base_dir, 'data', 'heart.csv')
-        qust_cleaned = pd.read_csv(csv_path)
-        target = '是否有心臟病'
-        feature_1 = 'ST 段斜率'
-        feature_2 = '運動是否誘發心絞痛'
-        # 2. 100% 複製您的 Colab 流程
-        X_selected = qust_cleaned[[feature_1, feature_2]]
-        y = qust_cleaned[target]
-        # 3. 分割
-        X_train, X_test, y_train, y_test = train_test_split(
-            X_selected, y, test_size=0.3, random_state=42, stratify=y
-        )
-        # 4. 訓練
-        decision_tree_model = DecisionTreeClassifier(random_state=42)
-        decision_tree_model.fit(X_train, y_train) 
-        # 5. 產生 Graphviz DOT data
-        dot_data = export_graphviz(
-            decision_tree_model, 
-            out_file=None,
-            feature_names=X_selected.columns, 
-            class_names=['無心臟病', '有心臟病'], 
-            filled=True,
-            rounded=True,
-            special_characters=True
-        )
+        # 從快取中取得 results (如果快取為空, get_decision_tree_results 會自動訓練)
+        results = get_decision_tree_results()
+        
+        # 從快取中取得 DOT data
+        dot_data = results["dot_data"]
+        
         # 6. 使用 Graphviz 動態產生 SVG
         graph = graphviz.Source(dot_data)
         svg_data = graph.pipe(format='svg')
+
         # 7. 回傳 SVG 圖片
         return Response(svg_data, mimetype='image/svg+xml')
 
