@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 
 {% block title %}職能發展學院-決策樹{% endblock %}
-
 {% block head %}
 {{super()}}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/decision_tree.css') }}">
@@ -23,23 +22,34 @@
             它會學習一系列的「是/否」問題（例如：`ST 段斜率` > 1.5 嗎？ `運動是否誘發心絞痛` == 1 嗎？），並像**流程圖**一樣將資料層層分類。
         </p>
         <p class="highlight">
-            🎯 <strong>提示</strong>：下方圖表將**動態生成**此模型（基於 2 個特徵）的「**思考流程圖**」。
+            🎯 <strong>提示</strong>：下方圖表將**動態生成**此模型（基於自動篩選的特徵）的「**思考流程圖**」。
         </p>
     </div>
 
-    <div class="legeng-info">
-        <h4>圖表說明</h4>
-        <ul>
-            <li><span class=""></span></li>
-            
+    <div class="tree-legend">
+        <h4>圖例說明</h4>
+        <div class="legend-grid">
+            <div class="legend-item">
+                <span class="legend-box color-class-0"></span>
+                <span>主要類別為「無心臟病」</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-box color-class-1"></span>
+                <span>主要類別為「有心臟病」</span>
+            </div>
+        </div>
+        <ul class="legend-text">
+            <li><strong>samples:</strong> 進入此節點的樣本總數。</li>
+            <li><strong>value = [A, B]:</strong> [ A = 無心臟病樣本數, B = 有心臟病樣本數 ]</li>
+            <li><strong>class:</strong> 此節點的最終預測 (多數決)。</li>
         </ul>
-        <p class="help-text"></p>
     </div>
 
-    <div class="chart-container">
-        <div id="plotly-chart">
+    <div class="tree-container">
+        <h3>決策樹模型</h3>
+        <div id="graphviz-chart" class="loading">
             <div class="loading-spinner"></div>
-            <p class="loading-text">正在從伺服器載入並訓練模型...</p>
+            <p class="loading-text">正在從伺服器載入並產生「樹狀圖」...</p>
         </div>
     </div>
 
@@ -70,6 +80,36 @@
                 <h4>AUC 值</h4>
                 <div id="metrics-auc" class="metric-value">--</div>
                 <div class="metric-description">ROC 曲線下的面積，越大越好</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="model-info">
+        <h3>模型詳細資訊</h3>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">資料集：</span>
+                <span class="info-value" id="desc-dataset">--</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">總樣本數：</span>
+                <span class="info-value" id="desc-total-samples">--</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">訓練集大小：</span>
+                <span class="info-value" id="desc-train-size">--</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">測試集大小：</span>
+                <span class="info-value" id="desc-test-size">--</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">預測目標：</span>
+                <span class="info-value" id="desc-target">--</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">使用特徵：</span>
+                <span class="info-value" id="desc-features">--</span>
             </div>
         </div>
     </div>

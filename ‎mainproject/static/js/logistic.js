@@ -27,10 +27,12 @@ async function loadLogisticData() {
         if (result.success) {
             updateMetrics(result.metrics);
             drawPlot(result.data, result.description);
+            updateModelInfo(result.description);
 
             if (loadingSpinner) loadingSpinner.remove();
             if (loadingText) loadingText.remove();
-        } else {
+        }
+        else {
             throw new Error(result.error);
         }
     } catch (error) {
@@ -39,13 +41,24 @@ async function loadLogisticData() {
     }
 }
 
-// 3. 更新評估指標 (不變)
+// 更新模型評估指標 (Accuracy, Precision, Recall, F1, AUC)
 function updateMetrics(metrics) {
     document.getElementById('metrics-accuracy').textContent = metrics.accuracy;
     document.getElementById('metrics-precision').textContent = metrics.precision;
     document.getElementById('metrics-recall').textContent = metrics.recall;
     document.getElementById('metrics-f1').textContent = metrics.f1;
     document.getElementById('metrics-auc').textContent = metrics.auc;
+}
+
+// 更新模型基本資訊 (資料集、樣本數、特徵等)
+function updateModelInfo(description) {
+    document.getElementById('desc-dataset').textContent = description.dataset;
+    document.getElementById('desc-total-samples').textContent = description.total_samples;
+    document.getElementById('desc-train-size').textContent = description.train_size;
+    document.getElementById('desc-test-size').textContent = description.test_size;
+    document.getElementById('desc-target').textContent = description.target;
+    // 將特徵陣列轉為字串顯示
+    document.getElementById('desc-features').textContent = description.selected_features.join(', ');
 }
 
 // 4. 使用 Plotly.js 繪製圖表
@@ -158,5 +171,5 @@ function drawPlot(data, description) {
     Plotly.newPlot(chartDiv, plotData, layout, config);
     chartDiv.classList.remove('loading');
 
-    // 更新模型資訊
+    
 }

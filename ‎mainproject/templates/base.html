@@ -16,7 +16,7 @@
     <!-- 導覽列 -->
     <nav class="navbar">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index')}}">職能發展學院</a>
+            <a class="navbar-brand" href="{{ url_for('index')}}">職能發展學院-心臟病專題</a>
             <ul class="nav-list">
                 <li class="nav-item">
                     <a href="{{ url_for('index')}}" {% if request.endpoint=='index' %} class="active" {%
@@ -31,11 +31,6 @@
                 <li class="nav-item">
                     <a href="{{ url_for('logistic')}}" {% if request.endpoint=='logistic' %} class="active" {% endif
                         %}>邏輯迴歸</a>
-                </li>
-                
-                <li class="nav-item">
-                    <a href="{{ url_for('knn')}}" {% if request.endpoint=='knn' %} class="active" {% endif
-                        %}>knn</a>
                 </li>
                 
             </ul>
