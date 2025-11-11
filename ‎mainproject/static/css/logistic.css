@@ -259,3 +259,49 @@
     line-height: 1.4;
     margin-top: auto;
 }
+
+/* --- 6. 模型資訊 (.model-info) --- */
+.model-info {
+    background: #f8f9fa;
+    padding: 2rem;
+    border-radius: 10px;
+    margin-top: 2rem;
+    border-left: 4px solid #0B346E;
+}
+
+.model-info h3 {
+    color: #0B346E;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-size: 1.8rem;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.info-item {
+    background: #fff;
+    padding: 1rem;
+    border-radius: 5px;
+    border: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+}
+
+
+.info-label {
+    font-weight: 600;
+    color: #333;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.info-value {
+    font-weight: 400;
+    color: #0B346E;
+    font-size: 1.1rem;
+    word-break: break-all;
+}

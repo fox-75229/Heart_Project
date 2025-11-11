@@ -178,4 +178,4 @@ async function loadGraphviz() {
     } catch (error) {
         chartDiv.innerHTML = `<span style="color:red;">❌ 載入失敗: ${error.message}</span>`;
     }
-}   
+}

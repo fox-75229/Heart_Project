@@ -28,10 +28,6 @@ dt_cache = {}
 def index():
     return render_template("index.html")
 
-@app.route("/knn")
-def knn():
-    return render_template("knn.html")
-
 @app.route("/decision_tree")
 def decision_tree():
     return render_template("decision_tree.html")
@@ -103,9 +99,14 @@ def logistic_data():
             },
             "metrics": best_metrics,
             "description":{
-                "dataset": "心臟衰竭預測資料集 (已清理)",
-                "x1_feature": feature_1, "x2_feature": feature_2, "y_target": target,
-                "info": "圖表顯示2D模型，指標顯示All-Feature模型。"
+                "dataset": "心臟衰竭資料集",
+                "x1_feature": feature_1, # 用於 Plotly 標題
+                "x2_feature": feature_2, # 用於 Plotly 標題
+                "total_samples": len(qust_cleaned),
+                "train_size": len(X_train_plot), # 使用「高分模型」的訓練集大小
+                "test_size": len(X_test_plot),   # 使用「高分模型」的測試集大小
+                "target": target,
+                "selected_features": [feature_1, feature_2] 
             }
         }
         return jsonify(response)
@@ -194,7 +195,7 @@ def get_decision_tree_results():
     dt_cache["metrics"] = metrics
     dt_cache["dot_data"] = dot_data
     dt_cache["description"] = {
-        "dataset": "心臟衰竭預測資料集 (已清理)",
+        "dataset": "心臟衰竭資料集",
         "selected_features": selected_features,
         "train_size": len(X_train),
         "test_size": len(X_test),

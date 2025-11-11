@@ -79,12 +79,43 @@
         </div>
     </div>
 
+    <div class="model-info">
+        <h3>模型詳細資訊</h3>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">資料集：</span>
+                <span class="info-value" id="desc-dataset">--</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">總樣本數：</span>
+                <span class="info-value" id="desc-total-samples">--</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">訓練集大小：</span>
+                <span class="info-value" id="desc-train-size">--</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">測試集大小：</span>
+                <span class="info-value" id="desc-test-size">--</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">預測目標：</span>
+                <span class="info-value" id="desc-target">--</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">使用特徵：</span>
+                <span class="info-value" id="desc-features">--</span>
+            </div>
+        </div>
+    </div>
+
 </div>
 {% endblock %}
 
 
 {% block scripts %}
 {{super()}}
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<!-- <script src="https://cdn.plot.ly/plotly-latest.min.js"></script> -->
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 <script src="{{ url_for('static', filename='js/logistic.js') }}"></script>
 {% endblock %}
