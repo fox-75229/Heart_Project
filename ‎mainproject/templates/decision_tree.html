@@ -26,6 +26,7 @@
         </p>
     </div>
 
+
     <div class="tree-legend">
         <h4>圖例說明</h4>
         <div class="legend-grid">
@@ -45,13 +46,56 @@
         </ul>
     </div>
 
+
+
+    <div class="control-panel">
+        <div class="control-header">
+            <h4>調整ST段斜率及運動是否誘發心絞痛預測結果</h4>
+        </div>
+        <div class="st-control">
+            <label for="k-slider">心電圖中ST段斜率：</label>
+            <input type="range" id="k-slider" min="0" max="2" value="1" class="slider">
+            <span id="k-value" class="value-display">1</span>
+        </div>
+
+        <div class="angina-control">
+            <span class="angina-label-text">運動是否誘發心絞痛：</span>
+            <div class="radio-option">
+                <label for="angina-yes">YES</label>
+                <input type="radio" id="angina-yes" name="angina_group" value="1">
+            </div>
+            <div class="radio-option">
+                <label for="angina-no">NO</label>
+                <input type="radio" id="angina-no" name="angina_group" value="0" checked>
+
+            </div>
+        </div>
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>載入中...</p>
+        </div>
+    </div>
+
+
+    
+
     <div class="tree-container">
         <h3>決策樹模型</h3>
         <div id="graphviz-chart" class="loading">
             <div class="loading-spinner"></div>
             <p class="loading-text">正在從伺服器載入並產生「樹狀圖」...</p>
         </div>
+        
     </div>
+
+    <div class="predict-container">
+        <div class="predict-text">
+            <p>經過預測:本案例屬於: <strong id="degree" class="deg">中</strong> 風險族群 <strong id="???" class="sug">建議定期追蹤觀察</strong></p>
+        </div>
+    </div>
+
+
+
 
     <div class="metrics-container">
         <h3>模型評估指標</h3>
