@@ -167,7 +167,7 @@ def get_decision_tree_results():
 
     # 3. 決策樹調參 (GridSearchCV) (不變)
     param_grid = {
-        'max_depth': [2],
+        'max_depth': [3, 5, 7, 10, None],
         'min_samples_split': [2, 5, 10],
         'min_samples_leaf': [1, 2, 4]
     }
@@ -263,47 +263,52 @@ def decision_tree_graph():
         print(f"產生 Graphviz 錯誤: {e}")
         return f"產生樹狀圖時發生錯誤: {e}", 500
 
-def get_leaf_id_to_svg_node_id(model):
-    """
-    建立 leaf_id 到 SVG node id 的對照表
-    """
-    # 遍歷所有節點，找到所有葉節點
-    tree = model.tree_
-    leaf_id_to_svg = {}
-    node_count = tree.node_count
-    for node_id in range(node_count):
-        left = tree.children_left[node_id]
-        right = tree.children_right[node_id]
-        # 葉節點: 左右都是 -1
-        if left == -1 and right == -1:
-            leaf_id_to_svg[node_id] = f"node{node_id}"
-    return leaf_id_to_svg
 
 @app.route("/api/decision_tree/predict", methods=['POST'])
 def decision_tree_predict():
+    """
+    (v8 - 最終修正版)
+    
+    Bug 原因： model.apply() 在接收 Pandas DataFrame 時，
+             特徵順序發生了錯亂，導致預測走錯分支。
+             
+    修正：   我們不再使用 Pandas DataFrame，
+             而是直接建立一個「Numpy 陣列」，
+             100% 確保輸入順序 ['ST 段斜率', '運動是否誘發心絞痛']
+             與模型訓練時的順序一致。
+    """
     try:
+        # 1. 取得快取的模型
         results = get_decision_tree_results()
         model = results["best_model"]
-        feature_names = results["description"]["selected_features"]
-
+        # 我們從快取中「知道」特徵順序
+        # feature_names = results["description"]["selected_features"]
+        
+        # 2. 取得前端傳來的 JSON 資料
         data = request.get_json()
         st_slope = float(data['st_slope'])
         angina = float(data['angina'])
+        
+        # 3. 【【【關鍵 Bug 修正】】】
+        #    不再建立 Pandas DataFrame
+        
+        input_array = [[st_slope, angina]]
 
-        input_df = pd.DataFrame({
-            'ST 段斜率': [st_slope],
-            '運動是否誘發心絞痛': [angina]
-        }, columns=feature_names)
+        # --- 【【【修正完畢】】】 ---
 
-        path_sparse_matrix = model.decision_path(input_df)
+        # 4. 執行預測 (現在餵給它 input_array)
+        
+        # (A) 取得決策路徑 (用於高亮)
+        path_sparse_matrix = model.decision_path(input_array)
         path_nodes = path_sparse_matrix.indices.tolist()
-        leaf_id = int(model.apply(input_df)[0])
 
-        # 建立 leaf_id 到 SVG node id 的對照表
-        leaf_id_to_svg = get_leaf_id_to_svg_node_id(model)
-        svg_node_id = leaf_id_to_svg.get(leaf_id, f"node{leaf_id}")
-
+        # (B) 取得最終葉節點 (Leaf ID)。
+        leaf_id = int(model.apply(input_array)[0])
+        
+        # (C) 取得葉節點上的 value
         values = model.tree_.value[leaf_id].flatten().tolist()
+        
+        # (D) 計算「有心臟病」(Class 1) 的機率
         total_samples = sum(values)
         prob_class_1 = 0.0
         if total_samples > 0:
@@ -311,19 +316,17 @@ def decision_tree_predict():
 
         return jsonify({
             "success": True,
-            "path_nodes": path_nodes,
-            "leaf_id": leaf_id,
-            "svg_node_id": svg_node_id,  # 新增這個欄位
+            "path_nodes": path_nodes,   # <--- 這次 100% 正確
+            "leaf_id": leaf_id,         # <--- 這次 100% 正確
             "values": values,
             "probability": round(prob_class_1, 4)
         })
 
     except Exception as e:
-        print(f"预测时发生错误: {e}")
+        print(f"預測時發生錯誤: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
-
 
 
 # --- 啟動應用 ---

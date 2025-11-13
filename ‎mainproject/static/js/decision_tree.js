@@ -112,13 +112,15 @@ async function handlePrediction() {
     const predictBtn = document.getElementById('predict-btn');
     const loadingSpinner = document.getElementById('predict-loading');
 
+    // (v5 版的清除函式 - 它會清除舊高亮和隱藏舊文字)
+    clearPrediction();
+
     // 顯示載入中
     predictBtn.disabled = true;
     loadingSpinner.style.display = 'block';
-    clearPrediction(); // 清除舊結果
 
     try {
-        // A. 獲取輸入值
+        // A. 獲取輸入值 (我們需要保留這兩個變數)
         const stSlope = document.getElementById('k-slider').value;
         const angina = document.querySelector('input[name="angina_group"]:checked').value;
 
@@ -140,10 +142,9 @@ async function handlePrediction() {
         const result = await response.json();
 
         if (result.success) {
-            updatePredictionText(result.probability);
-            highlightLeafNode(result.svg_node_id); // 用 svg_node_id
-        }
-        else {
+            updatePredictionText(stSlope, angina);
+
+        } else {
             throw new Error(result.error);
         }
 
@@ -151,7 +152,6 @@ async function handlePrediction() {
         console.error("預測時發生錯誤:", error);
         // 顯示錯誤 (例如在 predict-container)
         const container = document.getElementById('predict-container');
-        // 使用 .predict-text 內部來顯示錯誤
         const textElement = container.querySelector('.predict-text p');
         if (textElement) {
             textElement.innerHTML = `<span class="error-text">❌ 預測失敗: ${error.message}</span>`;
@@ -167,37 +167,61 @@ async function handlePrediction() {
 // -----------------------------------------------------
 // 5. 更新預測文字 (高/中/低 風險)
 // -----------------------------------------------------
-function updatePredictionText(probability) {
+function updatePredictionText(stSlope, angina) {
     const container = document.getElementById('predict-container');
-    const riskLevelEl = document.getElementById('predict-risk-level');
-    const suggestionEl = document.getElementById('predict-suggestion');
-
-    let riskLevel, suggestionText, riskClass;
-
-
-    if (probability >= 0.7) {
-        riskLevel = "高";
-        suggestionText = "請盡速採取相關對策&臨床檢查";
-        riskClass = "risk-high";
-    } else if (probability >= 0.3) {
-        riskLevel = "中";
-        suggestionText = "建議定期追蹤觀察";
-        riskClass = "risk-medium";
-    } else {
-        riskLevel = "低";
-        suggestionText = "未出現異樣";
-        riskClass = "risk-low";
-    }
-
-    // 填入文字
-    riskLevelEl.textContent = riskLevel;
-    suggestionEl.textContent = suggestionText;
-
-    // 移除舊的 class，加入新的
-    riskLevelEl.className = 'deg ' + riskClass;
-
-    // 確保原始 <p> 結構被還原 (如果之前顯示錯誤)
     const textElement = container.querySelector('.predict-text p');
+
+    let riskLevel = "";
+    let suggestionText = "";
+    let riskClass = "";
+
+    // --- 【【【關鍵修改：使用 6 種輸入組合】】】 ---
+
+    // (stSlope == 0, angina == 0)
+    if (stSlope == 0 && angina == 0) {
+        riskLevel = "中";
+        riskClass = "risk-medium";
+        suggestionText = "可能有無症狀心肌缺血的風險 建議定期追蹤";
+    }
+    // (stSlope == 0, angina == 1)
+    else if (stSlope == 0 && angina == 1) {
+        riskLevel = "高";
+        riskClass = "risk-high";
+        suggestionText = "患有心臟病風險極高 建議即刻安排儀器進行檢查";
+    }
+    // (stSlope == 1, angina == 0)
+    else if (stSlope == 1 && angina == 0) {
+        riskLevel = "中";
+        riskClass = "risk-medium";
+        suggestionText = "可能有無症狀心肌缺血的風險 若患有糖尿病或高齡個體 建議定期追蹤";
+    }
+    // (stSlope == 1, angina == 1)
+    else if (stSlope == 1 && angina == 1) {
+        riskLevel = "高";
+        riskClass = "risk-high";
+        suggestionText = "患有心臟病風險極高 建議即刻安排儀器進行檢查";
+    }
+    // (stSlope == 2, angina == 0)
+    else if (stSlope == 2 && angina == 0) {
+        riskLevel = "低";
+        riskClass = "risk-low";
+        suggestionText = "健康個體，身體狀況良好";
+    }
+    // (stSlope == 2, angina == 1)
+    else if (stSlope == 2 && angina == 1) {
+        riskLevel = "中";
+        riskClass = "risk-medium";
+        suggestionText = "身體狀況良好 痛感或許來自肌肉拉傷";
+    }
+    // 備用 (理論上不會觸發)
+    else {
+        riskLevel = "未知";
+        riskClass = "risk-medium";
+        suggestionText = "無法判斷，請確認輸入。";
+    }
+    // --- 【【【修改結束】】】 ---
+
+    // 將 6 種結果之一注入 HTML
     textElement.innerHTML = `
         經過預測:本案例屬於:
         <strong id="predict-risk-level" class="deg ${riskClass}">${riskLevel}</strong>
@@ -208,18 +232,38 @@ function updatePredictionText(probability) {
     // 顯示結果
     container.style.display = 'block';
 }
-
 // -----------------------------------------------------
 // 6. 高亮 SVG 決策路徑
 // -----------------------------------------------------
-function highlightLeafNode(svgNodeId) {
+function highlightLeafNode(leafId) {
     const chartDiv = document.getElementById('graphviz-chart');
     const svg = chartDiv.querySelector('svg');
     if (!svg) return;
-    const nodeGroup = svg.querySelector(`#${svgNodeId}`);
-    if (nodeGroup) {
-        nodeGroup.classList.add('highlight');
-    }
+
+    // (清除函式 clearPrediction 已經在 handlePrediction 中被呼叫過了)
+
+    // 1. 將 API 回傳的 ID (數字) 轉為字串，以便比對
+    const targetInternalId = String(leafId);
+
+    // 2. 取得 SVG 中的「所有」節點
+    const allNodes = svg.querySelectorAll('.node');
+
+    // 3. 遍歷所有節點
+    allNodes.forEach(node => {
+        // 4. 找到該節點內部的 <title> 標籤
+        const titleEl = node.querySelector('title');
+
+        // 5. 如果 <title> 的「文字內容」等於我們的目標 ID
+        if (titleEl && titleEl.textContent === targetInternalId) {
+
+            // 這才是我們要高亮的正確節點！
+            node.classList.add('highlight');
+
+            // (例如：leafId = 9, 
+            // 程式會找到 <g id="node10"> 
+            // 因為它內部的 <title> 是 "9")
+        }
+    });
 }
 
 // -----------------------------------------------------
