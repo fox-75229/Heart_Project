@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, Response # 匯入 Response
+from flask import Flask, render_template, jsonify, Response, request
 import pandas as pd
 import numpy as np
 import os
@@ -123,13 +123,14 @@ def logistic_data():
     
 
 # -----------------------------------------------------------------
-#     決策樹 API (已優化效能)
+#     決策樹 API 
 # -----------------------------------------------------------------
 
 def get_decision_tree_results():
     """
-    【新】這是一個內部函式，負責訓練模型並快取結果。
-    它只會在伺服器啟動後的「第一次」呼叫時執行。
+    【已修改】
+    強制使用 'ST 段斜率' 和 '運動是否誘發心絞痛' 訓練模型，
+    以匹配前端 UI 的互動預測功能。
     """
     # 檢查全域快取
     if "best_model" in dt_cache:
@@ -145,18 +146,28 @@ def get_decision_tree_results():
 
     target = '是否有心臟病'
     y = qust_cleaned[target]
-    # 1. 特徵選取
-    corr_matrix = qust_cleaned.corr()
-    corr_with_target = corr_matrix[target].abs().sort_values(ascending=False)
-    selected_features = [f for f in corr_with_target.index if f != target and corr_with_target[f] >= 0.54]
+    
+    # 1. --- 【重點修改】 ---
+    # 移除自動篩選
+    # corr_matrix = qust_cleaned.corr()
+    # ...
+    # 改為「固定特徵」，以匹配 UI
+    selected_features = ['ST 段斜率', '運動是否誘發心絞痛']
+    
+    # 檢查特徵是否存在
+    for feature in selected_features:
+        if feature not in qust_cleaned.columns:
+            raise KeyError(f"資料集 'heart.csv' 中缺少必要的特徵: {feature}")
+            
     X_selected = qust_cleaned[selected_features]
+    # --- 【修改結束】 ---
 
-    # 2. 資料分割
+    # 2. 資料分割 (不變)
     X_train, X_test, y_train, y_test = train_test_split(X_selected, y, test_size=0.3, random_state=42)
 
-    # 3. 決策樹調參 (GridSearchCV)
+    # 3. 決策樹調參 (GridSearchCV) (不變)
     param_grid = {
-        'max_depth': [3, 5, 7, 10, None],
+        'max_depth': [2],
         'min_samples_split': [2, 5, 10],
         'min_samples_leaf': [1, 2, 4]
     }
@@ -165,7 +176,7 @@ def get_decision_tree_results():
     grid_search.fit(X_train, y_train)
     best_dt_model = grid_search.best_estimator_
 
-    # 4. 評估
+    # 4. 評估 (不變)
     y_pred = best_dt_model.predict(X_test)
     y_pred_proba = best_dt_model.predict_proba(X_test)[:, 1]
     accuracy = accuracy_score(y_test, y_pred)
@@ -179,7 +190,7 @@ def get_decision_tree_results():
         "auc": round(auc_score, 4)
     }
     
-    # 5. 產生 DOT data (用於 Graphviz)
+    # 5. 產生 DOT data (不變)
     dot_data = export_graphviz(
         best_dt_model,
         out_file=None,
@@ -190,13 +201,13 @@ def get_decision_tree_results():
         special_characters=True
     )
     
-    # 6. 儲存所有結果到快取中
+    # 6. 儲存所有結果到快取中 (不變)
     dt_cache["best_model"] = best_dt_model
     dt_cache["metrics"] = metrics
     dt_cache["dot_data"] = dot_data
     dt_cache["description"] = {
         "dataset": "心臟衰竭資料集",
-        "selected_features": selected_features,
+        "selected_features": selected_features, # 這現在會是 ['ST 段斜率', '運動是否誘發心絞痛']
         "train_size": len(X_train),
         "test_size": len(X_test),
         "total_samples": len(qust_cleaned),
@@ -252,6 +263,69 @@ def decision_tree_graph():
         print(f"產生 Graphviz 錯誤: {e}")
         return f"產生樹狀圖時發生錯誤: {e}", 500
 
+def get_leaf_id_to_svg_node_id(model):
+    """
+    建立 leaf_id 到 SVG node id 的對照表
+    """
+    # 遍歷所有節點，找到所有葉節點
+    tree = model.tree_
+    leaf_id_to_svg = {}
+    node_count = tree.node_count
+    for node_id in range(node_count):
+        left = tree.children_left[node_id]
+        right = tree.children_right[node_id]
+        # 葉節點: 左右都是 -1
+        if left == -1 and right == -1:
+            leaf_id_to_svg[node_id] = f"node{node_id}"
+    return leaf_id_to_svg
+
+@app.route("/api/decision_tree/predict", methods=['POST'])
+def decision_tree_predict():
+    try:
+        results = get_decision_tree_results()
+        model = results["best_model"]
+        feature_names = results["description"]["selected_features"]
+
+        data = request.get_json()
+        st_slope = float(data['st_slope'])
+        angina = float(data['angina'])
+
+        input_df = pd.DataFrame({
+            'ST 段斜率': [st_slope],
+            '運動是否誘發心絞痛': [angina]
+        }, columns=feature_names)
+
+        path_sparse_matrix = model.decision_path(input_df)
+        path_nodes = path_sparse_matrix.indices.tolist()
+        leaf_id = int(model.apply(input_df)[0])
+
+        # 建立 leaf_id 到 SVG node id 的對照表
+        leaf_id_to_svg = get_leaf_id_to_svg_node_id(model)
+        svg_node_id = leaf_id_to_svg.get(leaf_id, f"node{leaf_id}")
+
+        values = model.tree_.value[leaf_id].flatten().tolist()
+        total_samples = sum(values)
+        prob_class_1 = 0.0
+        if total_samples > 0:
+            prob_class_1 = values[1] / total_samples
+
+        return jsonify({
+            "success": True,
+            "path_nodes": path_nodes,
+            "leaf_id": leaf_id,
+            "svg_node_id": svg_node_id,  # 新增這個欄位
+            "values": values,
+            "probability": round(prob_class_1, 4)
+        })
+
+    except Exception as e:
+        print(f"预测时发生错误: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+
 # --- 啟動應用 ---
 def main():
     """啟動應用（教學用：啟用 debug 模式）"""
@@ -262,3 +336,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
