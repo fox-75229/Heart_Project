@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}職能發展學院-決策樹{% endblock %}
+
 {% block head %}
 {{super()}}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/decision_tree.css') }}">
@@ -22,7 +23,7 @@
             它會學習一系列的「是/否」問題（例如：`ST 段斜率` > 1.5 嗎？ `運動是否誘發心絞痛` == 1 嗎？），並像**流程圖**一樣將資料層層分類。
         </p>
         <p class="highlight">
-            🎯 <strong>提示</strong>：下方圖表將**動態生成**此模型（基於自動篩選的特徵）的「**思考流程圖**」。
+            🎯 <strong>提示</strong>：下方圖表將**動態生成**此模型（基於 `ST 段斜率` 和 `運動是否誘發心絞痛`）的「**思考流程圖**」。
         </p>
     </div>
 
@@ -43,6 +44,51 @@
             <li><strong>value = [A, B]:</strong> [ A = 無心臟病樣本數, B = 有心臟病樣本數 ]</li>
             <li><strong>class:</strong> 此節點的最終預測 (多數決)。</li>
         </ul>
+    </div>
+
+
+    <div class="control-panel">
+        <div class="control-header">
+            <h4>調整ST段斜率及運動是否誘發心絞痛預測結果</h4>
+        </div>
+        <div class="st-control">
+            <label for="k-slider">心電圖中ST段斜率：</label>
+            <input type="range" id="k-slider" min="0" max="2" value="1" class="slider">
+            <span id="k-value" class="value-display">1</span>
+        </div>
+
+        <div class="angina-control">
+            <span class="angina-label-text">運動是否誘發心絞痛：</span>
+            <div class="radio-options-container">
+                <div class="radio-option">
+                    <label for="angina-yes">YES</label>
+                    <input type="radio" id="angina-yes" name="angina_group" value="1">
+                </div>
+                <div class="radio-option">
+                    <label for="angina-no">NO</label>
+                    <input type="radio" id="angina-no" name="angina_group" value="0" checked>
+                </div>
+            </div>
+        </div>
+
+        <div class="predict-action">
+            <button id="predict-btn" class="cta-button">
+                <i class="fas fa-play"></i> 執行預測
+            </button>
+            <div id="predict-loading" class="loading-spinner-small" style="display: none;"></div>
+        </div>
+
+    </div>
+
+    <div id="predict-container" class="predict-container" style="display: none;">
+        <div class="predict-text">
+            <p>
+                經過預測:本案例屬於:
+                <strong id="predict-risk-level" class="deg"></strong>
+                風險族群
+                <strong id="predict-suggestion" class="sug"></strong>
+            </p>
+        </div>
     </div>
 
     <div class="tree-container">
@@ -114,8 +160,7 @@
         </div>
     </div>
 
-</div>
-{% endblock %}
+</div> {% endblock %}
 
 
 {% block scripts %}
