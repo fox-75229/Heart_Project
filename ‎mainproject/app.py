@@ -334,8 +334,8 @@ def main():
     """啟動應用（教學用：啟用 debug 模式）"""
     print("--- 伺服器已啟動，正在監聽 http://0.0.0.0:5000 ---")
     print("--- 警告：Debug 模式已開啟，請勿用於生產環境 ---")
-    app.run(debug=True)
-    # app.run(debug=True, host='0.0.0.0', port=5000)
+    # app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)
 
 if __name__ == "__main__":
     main()
