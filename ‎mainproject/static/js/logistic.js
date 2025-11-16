@@ -1,12 +1,15 @@
-// static/js/logistic.js (v2 - 互動預測版)
+// static/js/logistic.js 
 
-// 【新增】全域變數，用於儲存圖表的 Y 軸最小值，供動畫使用
-let GLOBAL_CHART_Y_MIN = 0;
+// 建立全域變數來儲存圖表狀態
+let globalPlotData = [];
+let globalLayout = {};
+let globalConfig = {};
+let GLOBAL_CHART_Y_MIN = 0; // (這個我們還是保留)
 
 // 1. 等待 DOM 載入
 document.addEventListener("DOMContentLoaded", () => {
     loadLogisticData();
-    setupEventListeners(); // 【新增】 綁定控制項
+    setupEventListeners();
 });
 
 // 2. 呼叫 API (不變)
@@ -25,14 +28,11 @@ async function loadLogisticData() {
         if (result.success) {
             updateMetrics(result.metrics);
             updateModelInfo(result.description);
-
-            // 【修改】drawPlot 現在會儲存 y_min
             drawPlot(result.data, result.description);
 
             if (loadingSpinner) loadingSpinner.remove();
             if (loadingText) loadingText.remove();
-        }
-        else {
+        } else {
             throw new Error(result.error);
         }
     } catch (error) {
@@ -41,7 +41,7 @@ async function loadLogisticData() {
     }
 }
 
-// 3. 綁定所有事件監聽 (同 decision_tree.js)
+// 3. 綁定所有事件監聽 (v3 - 修正版)
 function setupEventListeners() {
     // A. ST 段斜率滑桿
     const slider = document.getElementById('st-slider');
@@ -49,8 +49,7 @@ function setupEventListeners() {
     if (slider) {
         slider.addEventListener('input', () => {
             kValue.textContent = slider.value;
-            clearPredictionStar(); // 【修改】只清除星星
-            document.getElementById('predict-container').style.display = 'none'; // 【新增】隱藏文字
+            clearPrediction(); //呼叫 清除函式
         });
     }
 
@@ -58,8 +57,7 @@ function setupEventListeners() {
     const radios = document.querySelectorAll('input[name="angina_group"]');
     radios.forEach(radio => {
         radio.addEventListener('change', () => {
-            clearPredictionStar(); // 【修改】只清除星星
-            document.getElementById('predict-container').style.display = 'none'; // 【新增】隱藏文字
+            clearPrediction(); //呼叫 清除函式
         });
     });
 
@@ -70,18 +68,18 @@ function setupEventListeners() {
     }
 }
 
-// 4. 使用 Plotly.js 繪製圖表
+
+// -----------------------------------------------------
+// 4. 使用 Plotly.js 繪製圖表 (儲存狀態)
+// -----------------------------------------------------
 function drawPlot(data, description) {
     const chartDiv = document.getElementById('plotly-chart');
     const JITTER_AMOUNT = 0.15;
 
-    // 【【【新增】】】
-    // 儲存 Y 軸最小值到全域變數，供動畫使用
     GLOBAL_CHART_Y_MIN = description.y_min || 0;
 
     // Jitter 函式 (不變)
     const filterAndJitterData = (points, y_val) => {
-        // ... (你原有的 Jitter 函式 - 不變) ...
         const jittered_x = [];
         const jittered_y = [];
         const custom_data = [];
@@ -100,30 +98,30 @@ function drawPlot(data, description) {
         return { x: jittered_x, y: jittered_y, customdata: custom_data };
     };
 
-    // --- 準備圖層 (Traces) --- (不變)
+    // --- 準備圖層 (Traces) ---
     const boundaryTrace = {
         type: 'heatmap',
         x: data.decision_boundary.xx[0],
         y: data.decision_boundary.yy.map(row => row[0]),
         z: data.decision_boundary.Z,
-        colorscale: [
-            ['0.0', 'rgb(74, 110, 184)'], // 藍色
-            ['1.0', 'rgb(187, 85, 85)']  // 紅色
-        ],
+        colorscale: [['0.0', 'rgb(74, 110, 184)'], ['1.0', 'rgb(187, 85, 85)']],
         zsmooth: false,
         showscale: false,
         hoverinfo: 'skip',
         opacity: 0.6
     };
+
     const train_0 = filterAndJitterData(data.train_points, 0);
     const train_1 = filterAndJitterData(data.train_points, 1);
     const test_0 = filterAndJitterData(data.test_points, 0);
     const test_1 = filterAndJitterData(data.test_points, 1);
+
     const hover_template =
         '<b>%{data.name}</b><br><br>' +
         `<b>${description.x1_feature}:</b> %{customdata.x}<br>` +
         `<b>${description.x2_feature}:</b> %{customdata.y_str}<br>` +
         '<extra></extra>';
+
     const traceTrain0 = {
         type: 'scatter', mode: 'markers', x: train_0.x, y: train_0.y,
         customdata: train_0.customdata, hovertemplate: hover_template,
@@ -145,15 +143,29 @@ function drawPlot(data, description) {
         name: '有心臟病 (測試)', marker: { color: 'red', symbol: 'triangle-up', size: 10, line: { color: 'black', width: 1 } }
     };
 
-    // 【修改】 將 plotData 設為全域變數，以便我們新增/刪除 trace
-    // (移除 const)
-    plotData = [boundaryTrace, traceTrain0, traceTrain1, traceTest0, traceTest1];
+    // 1. 將「原始」資料存到全域變數
+    globalPlotData = [boundaryTrace, traceTrain0, traceTrain1, traceTest0, traceTest1];
 
-    // --- 版面配置 --- (不變)
-    const layout = {
+    // --- 【【【v12.1 關鍵修正：鎖定 X/Y 軸】】】 ---
+    globalLayout = {
         title: ` ${description.x1_feature} 、 ${description.x2_feature}`,
-        xaxis: { title: description.x1_feature, zeroline: false },
-        yaxis: { title: description.x2_feature, zeroline: false },
+
+        // 【修改】 鎖定 X 軸
+        xaxis: {
+            title: description.x1_feature,
+            zeroline: false,
+            range: [-0.75, 2.75], // <-- 給予固定範圍
+            autorange: false     // <-- 關閉自動縮放
+        },
+
+        // 【修改】 鎖定 Y 軸
+        yaxis: {
+            title: description.x2_feature,
+            zeroline: false,
+            range: [-0.75, 1.75], // <-- 給予固定範圍
+            autorange: false     // <-- 關閉自動縮放
+        },
+
         hovermode: 'closest',
         legend: {
             orientation: 'h',
@@ -165,8 +177,8 @@ function drawPlot(data, description) {
         margin: { t: 80, b: 60, l: 60, r: 30 }
     };
 
-    // 圖表互動設定 (不變)
-    const config = {
+    // 3. 將「原始」設定存到全域變數
+    globalConfig = {
         responsive: true,
         scrollZoom: false,
         modeBarButtons: [
@@ -174,33 +186,33 @@ function drawPlot(data, description) {
         ]
     };
 
-    // 繪製圖表
-    Plotly.newPlot(chartDiv, plotData, layout, config);
+    // 4. 繪製「原始」圖表
+    Plotly.newPlot(chartDiv, globalPlotData, globalLayout, globalConfig);
     chartDiv.classList.remove('loading');
 }
 
-
-// --- 【【【以下為新增的預測功能】】】 ---
-
-// 5. 【新增】處理預測
+// -----------------------------------------------------
+// 5. 【核心】處理預測 (呼叫 showPredictionMarker)
+// -----------------------------------------------------
 async function handlePrediction() {
     const predictBtn = document.getElementById('predict-btn');
     const loadingSpinner = document.getElementById('predict-loading');
 
-    // 【【【關鍵修改】】】
-    // 1. 先清除舊的「星星」(如果有的話)
-    clearPredictionStar();
-    // 2. 隱藏舊的「文字」
-    document.getElementById('predict-container').style.display = 'none';
+    //呼叫新的清除函式
+    clearPrediction();
 
     // 顯示載入中
     predictBtn.disabled = true;
     loadingSpinner.style.display = 'block';
 
     try {
-        // A. 獲取輸入值
-        const stSlope = document.getElementById('st-slider').value;
-        const angina = document.querySelector('input[name="angina_group"]:checked').value;
+        // A. 獲取輸入值 (字串)
+        const stSlope_str = document.getElementById('st-slider').value;
+        const angina_str = document.querySelector('input[name="angina_group"]:checked').value;
+
+        // 【v3 修正】轉型
+        const stSlope = parseFloat(stSlope_str);
+        const angina = parseFloat(angina_str);
 
         // B. 呼叫新的預測 API
         const response = await fetch('/api/logistic/predict', {
@@ -221,11 +233,11 @@ async function handlePrediction() {
 
         if (result.success) {
 
-            // C. 更新預測文字 (這會讓 container.style.display = 'block')
-            updatePredictionText(stSlope, angina);
+            // C. 更新預測文字
+            updatePredictionText(stSlope_str, angina_str);
 
-            // D. 【星星動畫】
-            animatePredictionMarker(stSlope, angina, result.prediction_class);
+            // D. 顯示預測標記
+            showPredictionMarker(stSlope, angina, result.prediction_class);
 
         } else {
             throw new Error(result.error);
@@ -246,7 +258,9 @@ async function handlePrediction() {
     }
 }
 
-// 6. 【新增】更新預測文字 (同 decision_tree.js)
+// -----------------------------------------------------
+// 6. 更新預測文字 (v9 - 不變)
+// -----------------------------------------------------
 function updatePredictionText(stSlope, angina) {
     const container = document.getElementById('predict-container');
     const textElement = container.querySelector('.predict-text p');
@@ -304,75 +318,99 @@ function updatePredictionText(stSlope, angina) {
     container.style.display = 'block';
 }
 
-// 7. 【新增】星星動畫
-function animatePredictionMarker(x, y, predictionClass) {
+// -----------------------------------------------------
+// 7. 顯示星星 (使用 newPlot)
+// -----------------------------------------------------
+// --- 輔助：取得目前 Y 軸顯示範圍（安全取值） ---
+function getYAxisRange(chartDiv) {
+    // 優先使用已渲染圖表的 _fullLayout
+    try {
+        if (chartDiv && chartDiv._fullLayout && chartDiv._fullLayout.yaxis && Array.isArray(chartDiv._fullLayout.yaxis.range)) {
+            return chartDiv._fullLayout.yaxis.range;
+        }
+    } catch (e) {
+        // 忽略
+    }
+
+    // 若 globalLayout 有預設 range 則使用
+    if (globalLayout && globalLayout.yaxis && Array.isArray(globalLayout.yaxis.range)) {
+        return globalLayout.yaxis.range;
+    }
+
+    // 最後 fallback：使用預設最小值與最小+1
+    return [GLOBAL_CHART_Y_MIN, GLOBAL_CHART_Y_MIN + 1];
+}
+
+// --- 新的 showPredictionMarker（加入自下而上入場動畫） ---
+function showPredictionMarker(x, y, predictionClass) {
     const chartDiv = document.getElementById('plotly-chart');
+    const markerColor = (predictionClass === 1) ? '#ff4800ff' : '#0392ffff';
 
-    // 【【【關鍵修改】】】
-    // (清除邏輯已移到 handlePrediction，這裡不再呼叫)
-    // clearPrediction(); // <-- 移除這行
+    // 1. 先將舊星星清除
+    clearPrediction();
 
-    // 根據預測結果決定星星顏色 (0=藍, 1=紅)
-    const markerColor = (predictionClass === 1) ? 'red' : 'blue';
+    // 2. 建立星星 trace（起始位置在下面)
+    const startY = GLOBAL_CHART_Y_MIN - 0.8;
 
-    // 1. 定義星星的「起始」狀態 (在圖表底部)
-    const startTrace = {
-        x: [x],
-        y: [GLOBAL_CHART_Y_MIN], // 從 Y 軸底部開始
-        mode: 'markers',
+    const tracePrediction = {
         type: 'scatter',
+        mode: 'markers',
         name: '您的預測',
+        x: [x],
+        y: [startY], // ← 從下面開始
         hoverinfo: 'skip',
         marker: {
             symbol: 'star',
             size: 25,
             color: markerColor,
-            line: {
-                color: 'black',
-                width: 2
-            }
+            line: { color: 'black', width: 2 }
         }
     };
 
-    // 2. 將星星 (在底部) 新增到圖表
-    Plotly.addTraces(chartDiv, startTrace);
+    // 3. 新圖層（加入星星）
+    const newPlotData = [...globalPlotData, tracePrediction];
 
-    // 3. 取得這個新 Trace 的索引 (它是最後一個)
-    const traceIndex = chartDiv.data.length - 1;
+    // 4. 重新繪製（保留主圖 + 星星的初始位置）
+    Plotly.newPlot(chartDiv, newPlotData, globalLayout, globalConfig);
 
-    // 4. 定義動畫的「結束」狀態
-    const endFrame = {
-        data: [{
-            y: [y] // Y 軸移動到「真正」的位置 (0 或 1)
-        }]
-    };
+    // 5. —— 動畫 ——（從 startY 動到 y）
+    let currentY = startY;
+    const duration = 500; // 動畫時間 (ms)
+    const fps = 60;
+    const step = (y - startY) / (duration / (1000 / fps));
 
-    // 5. 執行動畫
-    Plotly.animate(chartDiv, endFrame, {
-        frame: {
-            duration: 700, // 動畫時間 (毫秒)
-            redraw: false
-        },
-        transition: {
-            duration: 700,
-            easing: 'cubic-out' // 緩動效果
+    const interval = setInterval(() => {
+        currentY += step;
+
+        if ((step > 0 && currentY >= y) || (step < 0 && currentY <= y)) {
+            currentY = y;  // 最終位置
+            clearInterval(interval);
         }
-    });
+
+        // 更新星星位置（星星是最後一個 trace）
+        Plotly.restyle(chartDiv, { y: [[currentY]] }, newPlotData.length - 1);
+    }, 1000 / fps);
 }
 
-// 8. 【新增】清除預測 (清除星星和文字)
-function clearPredictionStar() {
-    // B. 移除星星 (Trace)
+
+
+
+// -----------------------------------------------------
+// 8. 清除預測 (使用 newPlot)
+// -----------------------------------------------------
+function clearPrediction() {
+    // 隱藏預測文字
+    const container = document.getElementById('predict-container');
+    if (container) container.style.display = 'none';
+
     const chartDiv = document.getElementById('plotly-chart');
-    if (chartDiv.data) {
-        // 檢查最後一個 trace 是否為 '您的預測'
-        const lastTrace = chartDiv.data[chartDiv.data.length - 1];
-        if (lastTrace && lastTrace.name === '您的預測') {
-            // 只刪除最後一個 trace
-            Plotly.deleteTraces(chartDiv, -1);
-        }
+
+    // 重新繪製原始 5 個 trace（去掉星星）
+    if (globalPlotData && globalPlotData.length > 0) {
+        Plotly.newPlot(chartDiv, globalPlotData, globalLayout, globalConfig);
     }
 }
+
 
 
 // --- (舊的) 填充指標 (不變) ---
