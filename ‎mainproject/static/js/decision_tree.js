@@ -79,11 +79,11 @@ async function loadGraphviz() {
 // -----------------------------------------------------
 function setupEventListeners() {
     // A. ST 段斜率滑桿
-    const slider = document.getElementById('k-slider');
-    const kValue = document.getElementById('k-value');
+    const slider = document.getElementById('st-slider');//==================================================================================
+    const stValue = document.getElementById('st-value'); //==================================================================================
     if (slider) {
         slider.addEventListener('input', () => {
-            kValue.textContent = slider.value;
+            stValue.textContent = slider.value;
             // (可選) 滑動時清除舊的預測
             clearPrediction();
         });
@@ -121,7 +121,7 @@ async function handlePrediction() {
 
     try {
         // A. 獲取輸入值 (我們需要保留這兩個變數)
-        const stSlope = document.getElementById('k-slider').value;
+        const stSlope = document.getElementById('st-slider').value;//=======================================================================
         const angina = document.querySelector('input[name="angina_group"]:checked').value;
 
         // B. 呼叫預測 API
