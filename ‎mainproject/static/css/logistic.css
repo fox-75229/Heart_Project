@@ -55,9 +55,45 @@
 /* 【更新】配合您 HTML 中的 .legeng-info 拼寫錯誤 */
 
 .predict-box {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    /* 桌機水平排列 */
+    gap: 1.5rem;
+    align-items: stretch;
+    margin-bottom: 2rem;
+}
+
+.predict-box>* {
     display: flex;
-    gap: 1rem;
-    /* 盒子間距 */
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+/* ============================= */
+/* 響應式：平板 */
+/* ============================= */
+@media (max-width: 992px) {
+    .predict-box {
+        grid-template-columns: 1fr;
+        /* 變單欄但保持美觀 */
+        gap: 1rem;
+    }
+}
+
+/* ============================= */
+/* 手機排版*/
+/* ============================= */
+@media (max-width: 768px) {
+    .predict-box {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .legeng-info,
+    .control-panel {
+        width: 100%;
+        margin: 0 auto;
+    }
 }
 
 
@@ -72,6 +108,7 @@
 }
 
 .legeng-info h4 {
+    font-size: 1.5rem;
     color: #0B346E;
     margin-bottom: 1rem;
 }
@@ -79,20 +116,19 @@
 .legeng-info ul {
     list-style: none;
     padding: 0;
-    margin-bottom: 1rem;
 }
 
 .legeng-info li {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
 }
 
 .legeng-info .help-text {
     color: #666;
     font-size: 0.9rem;
-    margin-top: 1rem;
+    margin-top: 0.5rem;
     font-style: italic;
 }
 
@@ -151,12 +187,21 @@
     padding: 1.5rem;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e0e0;
     margin-bottom: 2rem;
     /*置中*/
     display: flex;
     flex-direction: column;
     align-items: center;
 }
+/* .legeng-info {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e0e0;
+    margin-bottom: 2rem;
+} */
 
 .control-header h4 {
     color: #0B346E;
@@ -180,7 +225,7 @@
 }
 
 .slider {
-    width: 400px;
+    width: 300px;
     height: 6px;
     border-radius: 5px;
     background: #ddd;
