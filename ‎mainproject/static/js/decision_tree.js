@@ -62,10 +62,8 @@ async function loadGraphviz() {
 function setupEventListeners() {
     // ST 段斜率滑桿
     const slider = document.getElementById('st-slider');
-    const stValue = document.getElementById('st-value');
     if (slider) {
         slider.addEventListener('input', () => {
-            stValue.textContent = slider.value;
             clearPrediction();
         });
     }
@@ -108,8 +106,10 @@ async function handlePrediction() {
         }
 
         const result = await response.json();
+
         if (result.success) {
-            updatePredictionText(stSlope, angina);
+            const riskClass = updatePredictionText(stSlope, angina);
+            highlightLeafNode(result.leaf_id, riskClass);
         } else {
             throw new Error(result.error);
         }
@@ -168,12 +168,14 @@ function updatePredictionText(stSlope, angina) {
         <strong id="predict-suggestion" class="sug">${suggestionText}</strong>
     `;
     container.style.display = 'block';
+
+    return riskClass;
 }
 
 // -----------------------------------------------------
 // 高亮 SVG 樹狀圖節點
 // -----------------------------------------------------
-function highlightLeafNode(leafId) {
+function highlightLeafNode(leafId, riskClass) {
     const svg = document.getElementById('graphviz-chart').querySelector('svg');
     if (!svg) return;
 
@@ -183,7 +185,7 @@ function highlightLeafNode(leafId) {
     allNodes.forEach(node => {
         const titleEl = node.querySelector('title');
         if (titleEl && titleEl.textContent === targetInternalId) {
-            node.classList.add('highlight');
+            node.classList.add(riskClass);
         }
     });
 }
@@ -197,13 +199,22 @@ function injectGraphvizCSS() {
 
     const style = document.createElementNS("http://www.w3.org/2000/svg", "style");
     style.textContent = `
+        /* 1. (不變) 節點 hover 效果 */
         .node { cursor: pointer; transition: transform 0.2s ease, filter 0.2s ease; transform-origin: center; }
         .node:hover { transform: scale(1.02); filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3)); }
-        .node.highlight { filter: drop-shadow(0 0 8px #ffc107); }
-        .node.highlight polygon { stroke: #ffc107; stroke-width: 4px; }
-        .edge.highlight { filter: drop-shadow(0 0 5px #ffc107); }
-        .edge.highlight path { stroke: #ffc107; stroke-width: 3px; }
-        .edge.highlight polygon { fill: #ffc107; stroke: #ffc107; }
+
+        /* 2. 【高】風險 (紅色) */
+        .node.risk-high { filter: drop-shadow(0 0 8px #FF4136); }
+        .node.risk-high polygon { stroke: #FF4136; stroke-width: 8px; }
+        /* (我們目前只高亮葉節點，所以不需要 .edge 規則) */
+
+        /* 3. 【中】風險 (橘色) */
+        .node.risk-medium { filter: drop-shadow(0 0 8px #FFDC00); }
+        .node.risk-medium polygon { stroke: #FFDC00; stroke-width: 8px; }
+
+        /* 4. 【低】風險 (綠色) */
+        .node.risk-low { filter: drop-shadow(0 0 8px #01FF70); }
+        .node.risk-low polygon { stroke: #01FF70; stroke-width: 8px; }
     `;
     svg.prepend(style);
 }
@@ -215,7 +226,10 @@ function clearPrediction() {
     document.getElementById('predict-container').style.display = 'none';
     const svg = document.getElementById('graphviz-chart').querySelector('svg');
     if (svg) {
-        svg.querySelectorAll('.node.highlight, .edge.highlight').forEach(el => el.classList.remove('highlight'));
+        const highlightedNodes = svg.querySelectorAll('.risk-high, .risk-medium, .risk-low');
+        highlightedNodes.forEach(el => {
+            el.classList.remove('risk-high', 'risk-medium', 'risk-low');
+        });
     }
 }
 

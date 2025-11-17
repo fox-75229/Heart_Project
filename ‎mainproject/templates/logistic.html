@@ -51,21 +51,34 @@
             <div class="control-header">
                 <h4>調整ST段斜率及運動是否誘發心絞痛預測結果</h4>
             </div>
-            <div class="st-control">
-                <label for="st-slider">心電圖中ST段斜率:</label>
-                <input type="range" id="st-slider" min="0" max="2" value="1" class="slider">
-                <span id="st-value" class="value-display">1</span>
+            <div class="st-control-container"> 
+                <label for="st-slider" class="st-slider-label">心電圖中ST段斜率:</label>
+                <div class="st-control-stepped">
+                    <div class="slider-labels">
+                        <span>下降</span>
+                        <span>平穩</span>
+                        <span>上升</span>
+                    </div>
+
+                    <input type="range" id="st-slider" min="0" max="2" value="1" step="1" class="slider">
+
+                    <div class="slider-ticks">
+                        <span>0</span>
+                        <span>1</span>
+                        <span>2</span>
+                    </div>
+                </div>
             </div>
 
             <div class="angina-control">
                 <span class="angina-label-text">運動是否誘發心絞痛：</span>
                 <div class="radio-options-container">
                     <div class="radio-option">
-                        <label for="angina-yes">YES</label>
+                        <label for="angina-yes">YES(1)</label>
                         <input type="radio" id="angina-yes" name="angina_group" value="1">
                     </div>
                     <div class="radio-option">
-                        <label for="angina-no">NO</label>
+                        <label for="angina-no">No(0)</label>
                         <input type="radio" id="angina-no" name="angina_group" value="0" checked>
                     </div>
                 </div>

@@ -45,10 +45,9 @@ async function loadLogisticData() {
 function setupEventListeners() {
     // A. ST 段斜率滑桿
     const slider = document.getElementById('st-slider');
-    const kValue = document.getElementById('st-value');
+    
     if (slider) {
         slider.addEventListener('input', () => {
-            kValue.textContent = slider.value;
             clearPrediction(); //呼叫 清除函式
         });
     }
