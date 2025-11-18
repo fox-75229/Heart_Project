@@ -1,12 +1,37 @@
+/*
+ * 基礎樣式表 (base.css)
+ * * 說明：
+ * 這是全站共用的基礎 CSS 檔案，對應 base.html 模板。
+ * 它定義了：
+ * 1. 全域 CSS 變數 (顏色主題)
+ * 2. 基本的樣式重置 (Reset)
+ * 3. 共用的 .container 佈局
+ * 4. 頂部導覽列 (Navbar) 的桌機版樣式
+ * 5. 頁尾 (Footer) 樣式
+ * 6. 響應式設計 (RWD)，用於處理手機/平板的導覽列 (漢堡選單)
+ */
+
+/* --- 1. 全域變數 (Root) --- */
+/* :root 用於定義全站共用的 CSS 變數，方便統一管理主題顏色 */
 :root {
     --primary-color: #005CAF;
+    /* 主要品牌顏色 (藍色) */
     --text-color-light: #ffffff;
+    /* 淺色文字 (白色) */
     --nav-hover-bg: rgba(255, 255, 255, 0.1);
+    /* 導覽列滑鼠懸停背景 (半透明白) */
     --nav-hover-bg-darker: rgba(255, 255, 255, 0.2);
+    /* 導覽列滑鼠懸停背景 (較深) */
     --shadow-color: rgba(0, 0, 0, 0.1);
+    /* 通用陰影顏色 */
 }
 
-/* 重置樣式 */
+/* --- 2. 基本重置與樣式 (Reset & Base) --- */
+
+/* * 通用選擇器 (*): 
+ * 用於清除所有元素的預設 margin 和 padding，
+ * 並將 box-sizing 設為 border-box，使寬高計算更直觀 (包含 padding 和 border)。
+ */
 * {
     margin: 0;
     padding: 0;
@@ -16,50 +41,72 @@
 /* 基本樣式 */
 body {
     font-family: 'Arial', sans-serif;
+    /* 設定全站預設字型 */
     line-height: 1.6;
+    /* 設定基本行高 */
 }
 
-/* 容器 */
+/* --- 3. 佈局容器 (Layout Container) --- */
+
+/* * 通用容器 (.container):
+ * 用於限制內容的最大寬度，並使其在頁面中水平居中。
+ */
 .container {
     max-width: 1200px;
     margin: 0 auto;
+    /* 水平居中 */
     padding: 0 1rem;
+    /* 左右保留 1rem 的內距，避免內容貼邊 */
 }
 
-/* 導覽列 */
+/* --- 4. 導覽列 (Navbar) --- */
 .navbar {
     background-color: var(--primary-color);
     padding: 0.5rem 1rem;
     position: sticky;
+    /* 關鍵：使導覽列在滾動時固定在視窗頂部 */
     top: 0;
     z-index: 1000;
+    /* 確保導覽列在最上層 */
     box-shadow: 0 2px 4px var(--shadow-color);
+    /* 底部加上細微陰影 */
 }
 
 .navbar .container {
     display: flex;
+    /* 使用 Flexbox 佈局 */
     align-items: center;
+    /* 垂直居中對齊 (品牌名稱和選單) */
     justify-content: space-between;
+    /* 兩端對齊 (品牌在左，選單在右) */
     height: 60px;
+    /* 固定導覽列高度 */
     padding: 0;
+    /* 覆蓋 .container 的預設 padding */
     position: relative;
+    /* 為了 RWD 的選單定位 */
 }
 
 .navbar-brand {
     color: var(--text-color-light);
     text-decoration: none;
+    /* 移除連結底線 */
     font-size: 1.25rem;
     font-weight: bold;
 }
 
-/* 導覽列選單 */
+/* 導覽列選單 (桌機版) */
 .nav-list {
     display: flex;
+    /* 水平排列選單項目 */
     list-style: none;
+    /* 移除 <ul> 的預設項目符號 */
     margin: 0;
     padding: 0;
     gap: 1.5rem;
+    /* 選單項目之間的間距 */
     align-items: center;
+    /* 垂直居中 */
 }
 
 .nav-item a {
@@ -68,24 +115,32 @@ body {
     padding: 0.5rem 1rem;
     border-radius: 4px;
     transition: background-color 0.3s ease, color 0.3s ease;
+    /* 平滑過渡效果 */
     display: block;
 }
 
+/* * 連結的滑鼠懸停 (hover) 效果，
+ * 以及 '目前頁面' (active) 的高亮樣式 (由 base.html 中的 Jinja2 判斷) 
+ */
 .nav-item a:hover,
 .nav-item a.active {
     background-color: var(--nav-hover-bg);
 }
 
-/* 漢堡選單按鈕 */
+/* --- 5. 漢堡選單按鈕 (Mobile Toggle) --- */
+
+/* 漢堡選單按鈕 (預設隱藏，僅在 RWD 模式顯示) */
 .nav-toggle {
     display: none;
+    /* 桌機版隱藏 */
     align-items: center;
     justify-content: center;
     background: transparent;
     border: none;
     cursor: pointer;
     padding: 0.5rem;
-    z-index: 1010; /* Higher than navbar content */
+    z-index: 1010;
+    /* 必須高於 .nav-list，確保能被點擊 */
 }
 
 .hamburger-icon {
@@ -96,24 +151,33 @@ body {
 .hamburger-icon .line {
     fill: var(--text-color-light);
     transition: transform 0.3s ease, opacity 0.3s ease;
+    /* 動畫過渡 */
 }
 
-/* 漢堡選單按鈕動畫 */
+/* 漢堡選單按鈕動畫 (當按鈕被點擊，[aria-expanded="true"]) */
+/* * 這些樣式會將三條橫線變形為一個 "X" 符號
+ */
 .nav-toggle[aria-expanded="true"] .line.top {
     transform: translateY(20px) rotate(45deg);
+    /* 向上移動並旋轉 */
 }
 
 .nav-toggle[aria-expanded="true"] .line.middle {
     opacity: 0;
+    /* 中間線條隱藏 */
 }
 
 .nav-toggle[aria-expanded="true"] .line.bottom {
     transform: translateY(-20px) rotate(-45deg);
+    /* 向下移動並旋轉 */
 }
 
-/* 主要內容區 */
+/* --- 6. 主要內容與頁尾 (Main & Footer) --- */
+
+/* 主要內容區 (在導覽列和頁尾之間) */
 main {
     padding: 2rem 0;
+    /* 提供上下內距 */
 }
 
 /* 頁尾 */
@@ -123,10 +187,19 @@ footer {
     text-align: center;
     padding: 1rem;
     margin-top: 2rem;
+    /* 與 main 內容保持間距 */
 }
 
-/* 響應式設計 - 平板與手機 */
+/* --- 7. 響應式設計 (RWD) --- */
+
+/* * 當螢幕寬度小於或等於 768px 時 (通常是平板和手機)，
+ * 套用以下樣式。
+ */
 @media (max-width: 768px) {
+
+    /* * 這些是通用佈局 class，可能用於其他頁面 (如 index.html)。
+     * 在手機上，將 .row (如果存在) 改為垂直堆疊。
+     */
     .row {
         flex-direction: column;
     }
@@ -136,16 +209,19 @@ footer {
         width: 100%;
     }
 
-    .navbar .container {
-        position: relative;
-    }
+    /* .navbar .container 已有 position: relative，無需重複設定 */
 
+    /* 顯示漢堡選單按鈕 */
     .nav-toggle {
         display: flex;
         position: absolute;
+        /* 絕對定位 */
         top: 50%;
+        /* 垂直居中 (相對於 .navbar .container) */
         right: 1rem;
+        /* 靠右 */
         transform: translateY(-50%);
+        /* 精確垂直居中 */
         background-color: var(--nav-hover-bg);
         border-radius: 8px;
         padding: 0.5rem;
@@ -156,36 +232,55 @@ footer {
         background-color: var(--nav-hover-bg-darker);
     }
 
+    /* 在手機上稍微放大漢堡圖示 */
     .hamburger-icon {
         width: 32px;
         height: 32px;
     }
 
+    /* 手機版選單列表 (預設隱藏) */
     .nav-list {
-        display: none !important; /* Use important to override inline styles if any */
+        /* * 預設隱藏選單。
+         * !important 用於確保覆蓋桌機版的 display: flex。
+         * (另一種做法是在桌機版使用 @media (min-width: 769px) { display: flex; })
+         */
+        display: none !important;
         position: absolute;
+        /* 絕對定位，使其浮在 main 內容之上 */
         top: 100%;
+        /* 從導覽列正下方開始 */
         left: 0;
         right: 0;
         background-color: var(--primary-color);
         flex-direction: column;
+        /* 改為垂直堆疊 */
         padding: 0.5rem 0;
         gap: 0;
+        /* 移除桌機版的 gap */
         margin-top: 0.5rem;
+        /* 與導覽列保持一點間距 */
         border-radius: 0 0 8px 8px;
+        /* 圓角 */
         box-shadow: 0 4px 6px var(--shadow-color);
-        z-index: 1005; /* Below the toggle button but above other content */
+        z-index: 1005;
+        /* 確保在 main 內容之上，但在漢堡按鈕之下 */
     }
 
+    /* * 當選單被 JavaScript 打開時 (添加 .open class)
+     * 這會由 base.js 腳本控制
+     */
     .nav-list.open {
         display: flex !important;
+        /* 顯示選單 */
     }
 
     .nav-item {
         width: 100%;
+        /* 選單項目佔滿寬度 */
     }
 
     .nav-item a {
         padding: 0.75rem 1rem;
+        /* 調整點擊區域大小 */
     }
 }
