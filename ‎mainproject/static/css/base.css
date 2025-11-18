@@ -240,10 +240,6 @@ footer {
 
     /* 手機版選單列表 (預設隱藏) */
     .nav-list {
-        /* * 預設隱藏選單。
-         * !important 用於確保覆蓋桌機版的 display: flex。
-         * (另一種做法是在桌機版使用 @media (min-width: 769px) { display: flex; })
-         */
         display: none !important;
         position: absolute;
         /* 絕對定位，使其浮在 main 內容之上 */

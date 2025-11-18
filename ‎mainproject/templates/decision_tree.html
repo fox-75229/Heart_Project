@@ -1,14 +1,23 @@
+{# 繼承基礎模板 #}
 {% extends "base.html" %}
 
+{# 定義 'title' 區塊 #}
 {% block title %}職能發展學院-決策樹{% endblock %}
 
+{# 定義 'head' 區塊 #}
 {% block head %}
+
 {{super()}}
+{# 載入此頁面專屬的 decision_tree.css #}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/decision_tree.css') }}">
 {% endblock %}
 
+
+{# 定義 'content' 區塊 (頁面主要內容) #}
 {% block content %}
+
 <div class="logistic-container">
+
     <div class="page-header">
         <h1>決策樹 (Decision Tree)</h1>
         <p class="subtitle">使用心臟衰竭資料集進行心臟病預測 </p>
@@ -46,12 +55,12 @@
         </ul>
     </div>
 
-
     <div class="control-panel">
         <div class="control-header">
             <h4>調整ST段斜率及運動是否誘發心絞痛預測結果</h4>
         </div>
-        <div class="st-control-container"> 
+
+        <div class="st-control-container">
             <label for="st-slider" class="st-slider-label">心電圖中ST段斜率：</label>
             <div class="st-control-stepped">
                 <div class="slider-labels">
@@ -59,9 +68,7 @@
                     <span>平穩</span>
                     <span>上升</span>
                 </div>
-
                 <input type="range" id="st-slider" min="0" max="2" value="1" step="1" class="slider">
-
                 <div class="slider-ticks">
                     <span>0</span>
                     <span>1</span>
@@ -90,7 +97,6 @@
             </button>
             <div id="predict-loading" class="loading-spinner-small" style="display: none;"></div>
         </div>
-
     </div>
 
     <div id="predict-container" class="predict-container" style="display: none;">
@@ -173,10 +179,13 @@
         </div>
     </div>
 
-</div> {% endblock %}
+</div>
+{% endblock %}
 
 
+{# 5. 定義 'scripts' 區塊 #}
 {% block scripts %}
-{{super()}}
+
+{# 載入決策樹頁面的主要互動腳本 #}
 <script src="{{ url_for('static', filename='js/decision_tree.js') }}"></script>
 {% endblock %}
