@@ -1,7 +1,12 @@
-/* --- 決策樹頁面 (decision_tree.css) --- */
-/* --- 1. 頁面主要佈局 --- */
+/*
+ * 決策樹頁面樣式 (decision_tree.css)
+ * * 說明：
+ * 此檔案負責 decision_tree.html 頁面的所有樣式。
+ * 包含：互動控制面板、SVG 樹狀圖容器、模型指標卡片等。
+ */
 
-.logistic-container {
+/* --- 1. 頁面主要佈局 --- */
+.dt-container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 1rem;
@@ -24,6 +29,7 @@
 }
 
 /* --- 2. 資訊卡片 (.info-card) --- */
+/* 頁面頂部的演算法簡介 */
 .info-card {
     background: #f8f9fa;
     padding: 1.5rem;
@@ -43,6 +49,7 @@
     margin-bottom: 0.8rem;
 }
 
+/* 提示訊息 (e.g., "🎯 提示...") */
 .info-card .highlight {
     background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
     padding: 0.8rem 1rem;
@@ -52,7 +59,8 @@
     font-weight: 500;
 }
 
-/* --- 3. 【新】樹狀圖圖例 --- */
+/* --- 3. 樹狀圖圖例 (.tree-legend) --- */
+/* 解釋 SVG 圖表中顏色的區塊 */
 .tree-legend {
     background: #fdfdfd;
     padding: 0.5rem;
@@ -91,24 +99,24 @@
     border-radius: 4px;
 }
 
-/* (Graphviz 預設的 0/1 顏色) */
+/* (Graphviz 預設的 類別 0/1 顏色) */
 .tree-legend .color-class-0 {
     background-color: #ff9e49;
+    /* 橘色 (無心臟病) */
 }
 
-/* 橘色 (無心臟病) */
 .tree-legend .color-class-1 {
     background-color: #397ef7;
+    /* 藍色 (有心臟病) */
 }
 
-/* 藍色 (有心臟病) */
 .tree-legend .legend-text {
     list-style: none;
     padding-left: 20px;
     text-align: left;
     margin: 0 auto;
     max-width: 450px;
-    /* 讓文字置中 */
+    /* 讓文字列表居中 */
 }
 
 .tree-legend .legend-text li {
@@ -117,19 +125,18 @@
     line-height: 1.3;
 }
 
-/*========================================*/
-/* 控制面板 - 簡化版 */
-/*========================================*/
+/* --- 4. 互動控制面板 (.control-panel) --- */
+/* 包含滑桿、選項、預測按鈕的容器 */
 .control-panel {
     background: white;
     padding: 1.5rem;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     margin-bottom: 2rem;
-    /*置中*/
     display: flex;
     flex-direction: column;
     align-items: center;
+    /* 讓所有控制項置中 */
 }
 
 .control-header h4 {
@@ -138,32 +145,24 @@
     font-size: 1.5rem;
 }
 
-
-
+/* 4.1 ST 段斜率 (滑桿) */
 .st-control-container {
     display: flex;
     flex-direction: column;
-    /* 讓 標籤 和 滑桿 垂直堆疊 */
     align-items: center;
-    /* 讓它們在 .control-panel 中置中 */
     gap: 0.5rem;
-    /* 標籤和滑桿的間距 */
     width: 100%;
-    /* 填滿 .control-panel 的寬度 */
     max-width: 400px;
-    /* 設定一個最大寬度，保持美觀 */
+    /* 限制最大寬度 */
     margin: 0.5rem 0;
-    /* (增加垂直間距) */
 }
 
-/* 2. 你的 <label> 標籤 */
 .st-slider-label {
     font-weight: bold;
     color: #0B346E;
     font-size: 1.1rem;
 }
 
-/* 3. 步驟滑桿的「內部」容器 */
 .st-control-stepped {
     width: 100%;
     display: flex;
@@ -172,12 +171,11 @@
     gap: 0.25rem;
 }
 
-/* 4. 頂部標籤 (下降, 平穩, 上升) */
+/* (下降, 平穩, 上升) 文字 */
 .slider-labels {
     width: 100%;
     display: flex;
     justify-content: space-between;
-    /* 讓文字平均分佈 */
     font-size: 0.9rem;
     color: #333;
     font-weight: 500;
@@ -185,40 +183,7 @@
     box-sizing: border-box;
 }
 
-/* 5. 滑桿 (修改過的 .slider 樣式) */
-.slider {
-    width: 100%;
-    /* <-- 【重要】寬度改為 100%，以填滿新容器 */
-    height: 6px;
-    border-radius: 5px;
-    background: #ddd;
-    outline: none;
-    appearance: none;
-    margin: 0.25rem 0;
-    /* (微調垂直間距) */
-}
-
-.slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.slider::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    border: none;
-}
-/* 6. 底部數字 (0, 1, 2) */
+/* (0, 1, 2) 數字 */
 .slider-ticks {
     width: 100%;
     display: flex;
@@ -230,25 +195,56 @@
     box-sizing: border-box;
 }
 
+/* 自訂滑桿外觀 */
+.slider {
+    width: 100%;
+    height: 6px;
+    border-radius: 5px;
+    background: #ddd;
+    outline: none;
+    appearance: none;
+    /* 關鍵：移除預設樣式 */
+    margin: 0.25rem 0;
+}
 
-/*========================================*/
-/* --- 自訂 心絞痛 選項控制項 --- */
-/*========================================*/
+/* 自訂滑桿的「握把」 (Chrome/Safari) */
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* 自訂滑桿的「握把」 (Firefox) */
+.slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    border: none;
+}
+
+/* 4.2 心絞痛 (自訂 Radio 選項) */
 .angina-control {
     display: flex;
     align-items: center;
     gap: 10.3rem;
     flex-wrap: wrap;
+    /* RWD 換行 */
 }
 
-/* 1. 左側標題 */
 .angina-label-text {
     font-weight: bold;
     color: #0B346E;
     font-size: 1.1rem;
 }
 
-/* 2. 右側選項容器 */
 .radio-options-container {
     display: flex;
     gap: 1.5rem;
@@ -259,58 +255,48 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    /* "YES" 文字和 [方框] 之間的間距 */
+    /* 文字和 [方框] 之間的間距 */
 }
 
-/* "YES" / "NO" 的文字標籤 */
 .radio-option label {
     font-weight: bold;
     color: #0B346E;
     cursor: pointer;
-    /* 讓滑鼠變成 "手" */
 }
 
-
-/* --- 【關鍵】 自訂 Radio Button 外觀 --- */
-
-/* 1. 重設 Radio Button 預設外觀 */
+/* 關鍵：自訂 Radio Button 外觀 */
 .radio-option input[type="radio"] {
-    -webkit-appearance: none;
     appearance: none;
+    /* 移除預設樣式 */
     margin: 0;
     background-color: #fff;
-    /* 2. 建立方型外框 */
     width: 25px;
+    /* 方型外框 */
     height: 25px;
     border: 1px solid #777;
     cursor: pointer;
-    /* 3. 讓內部的 "::before" 元素置中 */
     display: grid;
     place-content: center;
 }
 
-/* 4. 建立內部的 "勾選" 標記 (我們用一個實心方塊代替) */
+/* 建立內部的 "勾選" 標記 (用 ::before 偽元素) */
 .radio-option input[type="radio"]::before {
     content: "";
     width: 17px;
-    /* 內方塊大小 */
     height: 17px;
-
-    /* 預設隱藏 (大小為 0) */
     transform: scale(0);
+    /* 預設隱藏 */
     transition: 120ms transform ease-in-out;
-
     background-color: #0B346E;
-    /* 勾選後的顏色 */
 }
 
-/* 5. 當 Radio Button 被選中時，顯示 "勾選" 標記 */
+/* 當 Radio 被選中時，顯示 "勾選" 標記 */
 .radio-option input[type="radio"]:checked::before {
     transform: scale(1);
     /* 恢復大小 (顯示) */
 }
 
-/* Loading 狀態 */
+
 .loading {
     display: none;
     text-align: center;
@@ -342,72 +328,117 @@
     }
 }
 
-/* --- 3. 【新】樹狀圖圖例 --- */
-.tree-legend {
-    background: #fdfdfd;
-    padding: 0.5rem;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
-    border: 1px solid #e0e0e0;
-    margin-bottom: 1rem;
-}
 
-.tree-legend h4 {
-    color: #0B346E;
-    margin-bottom: 0.75rem;
-    text-align: center;
-    font-size: 1.5rem;
-    font-weight: 600;
-}
 
-.tree-legend .legend-grid {
+/* --- 5. 預測按鈕與結果 --- */
+
+/* 5.1 預測按鈕區域 */
+.predict-action {
     display: flex;
     justify-content: center;
-    gap: 2rem;
-    margin-bottom: 0.75rem;
-    flex-wrap: wrap;
-}
-
-.tree-legend .legend-item {
-    display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 1rem;
+    padding-top: 1.5rem;
+    margin-top: 1.5rem;
+    width: 100%;
+    /* 讓分隔線填滿 .control-panel */
+    border-top: 1px solid #ddd;
 }
 
-.tree-legend .legend-box {
+.cta-button {
+    background-color: #0B346E;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.cta-button:hover {
+    background-color: #1a5ca3;
+    transform: translateY(-2px);
+}
+
+.cta-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.cta-button .fas {
+    /* FontAwesome 圖示 */
+    margin-right: 8px;
+}
+
+/* 5.2 預測用的小型載入動畫 */
+.loading-spinner-small {
     width: 20px;
     height: 20px;
-    border: 1px solid #555;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #0B346E;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* 5.3 預測結果顯示容器 */
+.predict-container {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+    display: flex;
+    /* (HTML 中預設為 display: none) */
+    flex-direction: column;
+    align-items: center;
+}
+
+.predict-container .predict-text p {
+    font-size: 1.2rem;
+    line-height: 1.7;
+    text-align: center;
+    margin: 0.5rem 0;
+}
+
+/* "高/中/低" 風險文字 */
+.predict-container .deg {
+    font-size: 1.3rem;
+    padding: 2px 6px;
     border-radius: 4px;
 }
 
-/* (Graphviz 預設的 0/1 顏色) */
-.tree-legend .color-class-0 {
-    background-color: #ff9e49;
-}
-
-/* 橘色 (無心臟病) */
-.tree-legend .color-class-1 {
-    background-color: #397ef7;
-}
-
-/* 藍色 (有心臟病) */
-.tree-legend .legend-text {
-    list-style: none;
-    padding-left: 20px;
-    text-align: left;
-    margin: 0 auto;
-    max-width: 450px;
-    /* 讓文字置中 */
-}
-
-.tree-legend .legend-text li {
+/* 建議文字 (e.g., "請注意健康") */
+.predict-container .sug {
+    display: block;
+    /* 換行 */
+    font-size: 1.1rem;
     color: #333;
-    margin-bottom: 0.5rem;
-    line-height: 1.3;
+    margin-top: 0.5rem;
 }
 
-/* --- 4. 【核心】樹狀圖容器樣式 --- */
+/* 預測結果的顏色 */
+.predict-container .deg.risk-high {
+    background-color: #d9534f;
+    /* 紅色 */
+    color: white;
+}
+
+.predict-container .deg.risk-medium {
+    background-color: #f0ad4e;
+    /* 橘色 */
+    color: white;
+}
+
+.predict-container .deg.risk-low {
+    background-color: #5cb85c;
+    /* 綠色 */
+    color: white;
+}
+
+/* --- 6. 樹狀圖容器 (SVG) --- */
 .tree-container {
     background: #ffffff;
     padding: 1.5rem;
@@ -429,10 +460,9 @@
 #graphviz-chart {
     width: 100%;
     min-height: 300px;
-    /* 最小高度 */
     background-color: #fcfcfc;
     overflow-x: auto;
-    /* 如果樹太寬，允許水平捲動 */
+    /* 關鍵：如果樹太寬，允許水平捲動 */
     padding: 1rem;
     box-sizing: border-box;
 }
@@ -442,10 +472,10 @@
     display: block;
     margin: 0 auto;
     max-width: none !important;
-    /* 確保 SVG 可以大於容器 (才能捲動) */
+    /* 關鍵：確保 SVG 可以大於容器 (才能捲動) */
 }
 
-/* 樹狀圖的讀取中動畫 */
+/* SVG 容器的「載入中」狀態 */
 #graphviz-chart.loading {
     display: flex;
     justify-content: center;
@@ -453,22 +483,33 @@
     flex-direction: column;
 }
 
-/*========================*/
-/*---預測建議---*/
-/*=========================*/
-.predict-container {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    margin-bottom: 2rem;
-    /*置中*/
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+/* (載入中樣式，共用) */
+.loading-text {
+    font-size: 1.1rem;
+    color: #555;
+    margin-top: 1rem;
+    font-weight: 500;
 }
 
-/* --- 5. 評估指標 (.metrics-container) --- */
+.loading-spinner {
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #0B346E;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+/* 錯誤訊息樣式 */
+.error-text {
+    color: #D8000C;
+    background-color: #FFD2D2;
+    padding: 1rem;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+/* --- 7. 模型評估指標 (.metrics-container) --- */
 .metrics-container {
     margin-top: 2rem;
     margin-bottom: 2rem;
@@ -484,6 +525,7 @@
 
 .metrics-grid {
     display: grid;
+    /* 響應式網格：自動調整欄位數，每個欄位最小 180px */
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 1.5rem;
     text-align: center;
@@ -526,9 +568,10 @@
     color: #666;
     line-height: 1.4;
     margin-top: auto;
+    /* 關鍵：讓描述文字永遠置底 */
 }
 
-/* --- 6. 模型資訊 (.model-info) --- */
+/* --- 8. 模型詳細資訊 (.model-info) --- */
 .model-info {
     background: #f8f9fa;
     padding: 2rem;
@@ -559,7 +602,6 @@
     flex-direction: column;
 }
 
-
 .info-label {
     font-weight: 600;
     color: #333;
@@ -572,140 +614,5 @@
     color: #0B346E;
     font-size: 1.1rem;
     word-break: break-all;
+    /* 避免文字溢出 */
 }
-
-/* --- 7. 讀取中 & 錯誤 (共用) --- */
-.loading-text {
-    font-size: 1.1rem;
-    color: #555;
-    margin-top: 1rem;
-    font-weight: 500;
-}
-
-.loading-spinner {
-    border: 5px solid #f3f3f3;
-    border-top: 5px solid #0B346E;
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    animation: spin 1s linear infinite;
-}
-
-/* (你檔案中已有的 @keyframes spin) 
-  @keyframes spin { ... } 
-*/
-
-.error-text {
-    color: #D8000C;
-    background-color: #FFD2D2;
-    padding: 1rem;
-    border-radius: 8px;
-    font-weight: 500;
-}
-
-
-/* --- 
-  【【【以下是新增的功能樣式】】】
---- */
-
-/* --- A. 預測按鈕區域 --- */
-.predict-action {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 1rem;
-    padding-top: 1.5rem;
-    margin-top: 1.5rem;
-
-    /* 因為 .control-panel 使用 align-items: center, 
-      我們需要設定 width: 100% 
-      讓頂部分隔線能填滿寬度 
-    */
-    width: 100%;
-    border-top: 1px solid #ddd;
-}
-
-.cta-button {
-    background-color: #0B346E;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.2s ease;
-}
-
-.cta-button:hover {
-    background-color: #1a5ca3;
-    transform: translateY(-2px);
-}
-
-.cta-button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.cta-button .fas {
-    /* 按鈕圖示 (需引入 FontAwesome) */
-    margin-right: 8px;
-}
-
-/* --- B. 預測用的小載入動畫 --- */
-.loading-spinner-small {
-    width: 20px;
-    height: 20px;
-    border: 3px solid #f3f3f3;
-    border-top: 3px solid #0B346E;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-
-/* --- C. 預測建議 (你已有 .predict-container 基礎樣式) --- */
-
-/* 預測結果的「內部文字」樣式 */
-.predict-container .predict-text p {
-    font-size: 1.2rem;
-    line-height: 1.7;
-    text-align: center;
-    margin: 0.5rem 0;
-}
-
-.predict-container .deg {
-    font-size: 1.3rem;
-    padding: 2px 6px;
-    border-radius: 4px;
-}
-
-.predict-container .sug {
-    display: block;
-    /* 讓建議文字換行 */
-    font-size: 1.1rem;
-    color: #333;
-    margin-top: 0.5rem;
-}
-
-/* 風險等級顏色 */
-.predict-container .deg.risk-high {
-    background-color: #d9534f;
-    /* 紅色 */
-    color: white;
-}
-
-.predict-container .deg.risk-medium {
-    background-color: #f0ad4e;
-    /* 橘色 */
-    color: white;
-}
-
-.predict-container .deg.risk-low {
-    background-color: #5cb85c;
-    /* 綠色 */
-    color: white;
-}
-
-/* (SVG 高亮樣式已由 JS 注入，不需在此添加)
-*/
