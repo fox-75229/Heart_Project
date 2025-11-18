@@ -1,5 +1,6 @@
 /* --- 決策樹頁面 (decision_tree.css) --- */
 /* --- 1. 頁面主要佈局 --- */
+
 .logistic-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -137,26 +138,64 @@
     font-size: 1.5rem;
 }
 
-.st-control {
+
+
+.st-control-container {
     display: flex;
+    flex-direction: column;
+    /* 讓 標籤 和 滑桿 垂直堆疊 */
     align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
+    /* 讓它們在 .control-panel 中置中 */
+    gap: 0.5rem;
+    /* 標籤和滑桿的間距 */
+    width: 100%;
+    /* 填滿 .control-panel 的寬度 */
+    max-width: 400px;
+    /* 設定一個最大寬度，保持美觀 */
+    margin: 0.5rem 0;
+    /* (增加垂直間距) */
 }
 
-.st-control label {
+/* 2. 你的 <label> 標籤 */
+.st-slider-label {
     font-weight: bold;
     color: #0B346E;
+    font-size: 1.1rem;
 }
 
-/* st 值 Slider */ /*============================================================================*/
+/* 3. 步驟滑桿的「內部」容器 */
+.st-control-stepped {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+/* 4. 頂部標籤 (下降, 平穩, 上升) */
+.slider-labels {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    /* 讓文字平均分佈 */
+    font-size: 0.9rem;
+    color: #333;
+    font-weight: 500;
+    padding: 0 5px;
+    box-sizing: border-box;
+}
+
+/* 5. 滑桿 (修改過的 .slider 樣式) */
 .slider {
-    width: 400px;
+    width: 100%;
+    /* <-- 【重要】寬度改為 100%，以填滿新容器 */
     height: 6px;
     border-radius: 5px;
     background: #ddd;
     outline: none;
     appearance: none;
+    margin: 0.25rem 0;
+    /* (微調垂直間距) */
 }
 
 .slider::-webkit-slider-thumb {
@@ -179,14 +218,18 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     border: none;
 }
-
-.value-display {
-    min-width: 30px;
-    text-align: center;
-    font-weight: bold;
+/* 6. 底部數字 (0, 1, 2) */
+.slider-ticks {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
     color: #667eea;
-    font-size: 1.2rem;
+    font-weight: bold;
+    padding: 0 5px;
+    box-sizing: border-box;
 }
+
 
 /*========================================*/
 /* --- 自訂 心絞痛 選項控制項 --- */
@@ -202,6 +245,7 @@
 .angina-label-text {
     font-weight: bold;
     color: #0B346E;
+    font-size: 1.1rem;
 }
 
 /* 2. 右側選項容器 */
@@ -665,4 +709,3 @@
 
 /* (SVG 高亮樣式已由 JS 注入，不需在此添加)
 */
-

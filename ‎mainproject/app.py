@@ -1,78 +1,114 @@
-# app.py (v10 - 邏輯迴歸預測版)
+"""
+主應用程式檔案 (app.py)
 
+一個 Flask 伺服器，提供機器學習模型的 API 和網頁介面。
+包含兩個主要模型：
+1. 邏輯迴歸 (Logistic Regression) - 用於分類和視覺化決策邊界。
+2. 決策樹 (Decision Tree) - 用於分類和視覺化決策過程。
+
+使用全域快取 (cache) 來儲存訓練好的模型，避免重複運算。
+"""
+
+# --- 1. 匯入套件 ---
+
+# Flask 框架相關
 from flask import Flask, render_template, jsonify, Response, request
+import os
+
+# 資料處理
 import pandas as pd
 import numpy as np
-import os
-import io # 用於處理圖片 I/O
 
-# 匯入決策樹和 Graphviz
-from sklearn.tree import DecisionTreeClassifier, export_graphviz
-import graphviz # 匯入 Graphviz
-
+# 機器學習 (Scikit-learn)
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
-from sklearn.metrics import classification_report, confusion_matrix, roc_curve, auc
-from sklearn.model_selection import GridSearchCV
-#---Flask 應用設定---
+from sklearn.tree import DecisionTreeClassifier, export_graphviz
+from sklearn.metrics import (
+    accuracy_score, precision_score, recall_score, f1_score, 
+    roc_auc_score, classification_report
+)
+
+# 視覺化
+import graphviz
+
+# --- 2. 應用程式設定 (Flask) ---
+
 app = Flask(__name__)
+app.json.ensure_ascii = False  # 讓 API 的 JSON 回應支援中文
 
-# 自定義JSON序列化設定
-app.json.ensure_ascii = False
+# --- 3. 全域快取 ---
+# 這些字典用來快取訓練好的模型和結果，避免每次 API 請求都重新訓練
+dt_cache = {}  # 決策樹模型快取
+lr_cache = {}  # 邏輯迴歸模型快取
 
-# --- 建立全域快取 (Cache) ---
-dt_cache = {}
-lr_cache = {} # <-- 【新增】邏輯迴歸的快取
+# --- 4. 網頁路由 (Pages) ---
 
-# --- 網頁路由 (不變) ---
 @app.route("/")
 def index():
+    """首頁"""
     return render_template("index.html")
 
 @app.route("/decision_tree")
 def decision_tree():
+    """決策樹展示頁面"""
     return render_template("decision_tree.html")
 
 @app.route("/logistic")
 def logistic():
+    """邏輯迴歸展示頁面"""
     return render_template("logistic.html")
 
 # -----------------------------------------------------------------
-#   邏輯迴歸 API 
+# 5. 邏輯迴歸 (Logistic Regression) - 核心邏輯與 API
 # -----------------------------------------------------------------
 
 def get_logistic_results():
     """
-    【【【新增】】】
-    這是一個內部函式，負責訓練「邏輯迴歸」模型並快取結果。
+    訓練邏輯迴歸模型並快取結果。
+
+    如果快取中已有結果，則直接回傳快取。
+    此函式會執行兩個訓練任務：
+    1.  **高分模型 (model_best)**: 
+        使用 *所有特徵* 進行訓練，以獲得最佳的評估指標 (metrics)。
+    2.  **圖表模型 (model_plot)**: 
+        僅使用 *兩個特徵* ('ST 段斜率', '運動是否誘發心絞痛') 進行訓練，
+        主要用於前端的 2D 視覺化和該圖表上的即時預測。
+    
+    Returns:
+        dict: 包含模型、指標和圖表資料的快取字典 (lr_cache)。
     """
-    # 檢查快取
+    # 檢查快取，如果 'model_plot' 已存在，表示已訓練過
     if "model_plot" in lr_cache:
         return lr_cache
     
-    print("--- 正在訓練邏輯迴歸模型，請稍候... ---")
+    print("--- (快取未命中) 正在訓練邏輯迴歸模型 ---")
 
-    # 1. 載入「已清理」的資料
+    # 1. 讀取資料
     base_dir = os.path.dirname(os.path.abspath(__file__))
     csv_path = os.path.join(base_dir, 'data', 'heart.csv')
     if not os.path.exists(csv_path):
-        raise FileNotFoundError(f"找不到檔案:{csv_path}")
+        raise FileNotFoundError(f"找不到資料檔案: {csv_path}")
     qust_cleaned = pd.read_csv(csv_path)
     
-    # 2. [A 部分] 訓練「高分模型」 (All Features)
     target = '是否有心臟病'
-    if target not in qust_cleaned.columns:
-        raise KeyError(f"CSV 檔案缺少目標欄位: '{target}'")
+
+    # 2. 訓練「高分模型」（使用所有特徵）以取得最佳評估指標
     X_all = qust_cleaned.drop(columns=[target])
     y_all = qust_cleaned[target]
+    
+    # 使用 stratify=y_all 確保訓練集和測試集中的類別比例相同
     X_train_all, X_test_all, y_train_all, y_test_all = train_test_split(
         X_all, y_all, test_size=0.3, random_state=42, stratify=y_all
     )
+    
     model_best = LogisticRegression(random_state=42, solver='liblinear', max_iter=1000)
     model_best.fit(X_train_all, y_train_all)
+    
+    # 預測並計算評估指標
     y_pred_class_best = model_best.predict(X_test_all)
-    y_pred_proba_best = model_best.predict_proba(X_test_all)[:, 1]
+    y_pred_proba_best = model_best.predict_proba(X_test_all)[:, 1] # 取出類別 1 的機率
+
+    # 儲存最佳模型的評估指標
     best_metrics = {
         "accuracy": round(accuracy_score(y_test_all, y_pred_class_best), 4),
         "precision": round(precision_score(y_test_all, y_pred_class_best), 4),
@@ -81,12 +117,9 @@ def get_logistic_results():
         "auc": round(roc_auc_score(y_test_all, y_pred_proba_best), 4)
     }
     
-    # 3. [B 部分] 訓練「圖表模型」 (2 Features)
+    # 3. 訓練「圖表模型」（僅使用兩個特徵）
     feature_1 = 'ST 段斜率'
     feature_2 = '運動是否誘發心絞痛'
-    if feature_1 not in qust_cleaned.columns or feature_2 not in qust_cleaned.columns:
-        raise KeyError(f"qust_cleaned 中缺少 '{feature_1}' 或 '{feature_2}'")
-    
     x_plot = qust_cleaned[[feature_1, feature_2]]
     y_plot = qust_cleaned[target]
     
@@ -97,55 +130,65 @@ def get_logistic_results():
     model_plot = LogisticRegression(random_state=42, solver='liblinear')
     model_plot.fit(X_train_plot, y_train_plot)
     
+    # 產生決策邊界資料 (Meshgrid)
+    # 找出兩個特徵的
     x_min, x_max = x_plot.iloc[:, 0].min() - 0.5, x_plot.iloc[:, 0].max() + 0.5
     y_min, y_max = x_plot.iloc[:, 1].min() - 0.5, x_plot.iloc[:, 1].max() + 0.5
-    step = 0.1
-    xx, yy = np.meshgrid(np.arange(x_min, x_max, step), np.arange(y_min, y_max, step))
-    meshgrid_data = np.c_[xx.ravel(), yy.ravel()]
-    meshgrid_data_df = pd.DataFrame(meshgrid_data, columns=[feature_1, feature_2])
-    Z = model_plot.predict(meshgrid_data_df)
-    Z = Z.reshape(xx.shape)
+    
+    # 建立網格點
+    xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
+    
+    # 將網格點轉換為 DataFrame 格式，以便模型預測
+    meshgrid_data = pd.DataFrame(np.c_[xx.ravel(), yy.ravel()], columns=[feature_1, feature_2])
+    
+    # 預測網格中每個點的類別
+    Z = model_plot.predict(meshgrid_data).reshape(xx.shape)
 
-    # 4. [C 部分] 組合圖表資料
+    # 4. 組合圖表所需的資料
     chart_data = {
-        "train_points":{ "x1": X_train_plot[feature_1].tolist(), "x2": X_train_plot[feature_2].tolist(), "y": y_train_plot.tolist() },
-        "test_points":{ "x1": X_test_plot[feature_1].tolist(), "x2": X_test_plot[feature_2].tolist(), "y": y_test_plot.tolist() },
-        "decision_boundary":{ "xx": xx.tolist(), "yy": yy.tolist(), "Z": Z.tolist() }
+        # 訓練集點位
+        "train_points": { "x1": X_train_plot[feature_1].tolist(), "x2": X_train_plot[feature_2].tolist(), "y": y_train_plot.tolist() },
+        # 測試集點位
+        "test_points": { "x1": X_test_plot[feature_1].tolist(), "x2": X_test_plot[feature_2].tolist(), "y": y_test_plot.tolist() },
+        # 決策邊界
+        "decision_boundary": { "xx": xx.tolist(), "yy": yy.tolist(), "Z": Z.tolist() }
     }
     
+    # 組合圖表描述資訊
     chart_description = {
         "dataset": "心臟衰竭資料集",
         "x1_feature": feature_1,
         "x2_feature": feature_2,
-        "total_samples": len(qust_cleaned),
-        "train_size": len(X_train_all), # <-- 修正：使用高分模型的樣本數
-        "test_size": len(X_test_all),   # <-- 修正：使用高分模型的樣本數
         "target": target,
-        "selected_features": X_all.columns.tolist(), # <-- 修正：回傳所有特徵
-        "y_min": y_min # <-- 【新增】回傳 Y 軸最小值，用於動畫
+        "total_samples": len(qust_cleaned),
+        "train_size": len(X_train_all), # 注意：這裡使用 all-feature 模型的樣本數
+        "test_size": len(X_test_all),
+        "selected_features": [feature_1, feature_2],
+        "y_min": y_min # 用於圖表 Y 軸的最小邊界
     }
 
-    # 5. 儲存到快取
-    lr_cache["model_plot"] = model_plot
-    lr_cache["best_metrics"] = best_metrics
-    lr_cache["chart_data"] = chart_data
-    lr_cache["chart_description"] = chart_description
+    # 5. 儲存結果到全域快取
+    lr_cache["model_plot"] = model_plot           # 用於 2D 預測的模型
+    lr_cache["best_metrics"] = best_metrics       # 使用所有特徵的最佳指標
+    lr_cache["chart_data"] = chart_data           # 2D 圖表資料
+    lr_cache["chart_description"] = chart_description # 圖表描述
     
-    print("--- 邏輯迴歸模型訓練完畢並已快取！ ---")
+    print("--- 邏輯迴歸模型訓練完成並已快取 ---")
     return lr_cache
 
 
 @app.route("/api/logistic/data")
 def logistic_data():
     """
-    【【【已修改】】】
-    改為從快取函式 get_logistic_results() 讀取資料
+    API 端點：取得邏輯迴歸的圖表資料和評估指標。
+    
+    Returns:
+        JSON: 包含圖表資料、最佳模型指標和描述的 JSON 物件。
     """
     try:
-        # 1. 從快取中取得 results
+        # 呼叫核心函式，如果已快取會立即回傳
         results = get_logistic_results()
         
-        # 2. 合併回應
         response = {
             "success": True,
             "data": results["chart_data"],
@@ -153,122 +196,121 @@ def logistic_data():
             "description": results["chart_description"]
         }
         return jsonify(response)
-        
-    # 錯誤處理 (不變)
     except FileNotFoundError as e:
-        print(f"檔案錯誤: {e}")
         return jsonify({"success": False, "error": str(e)}), 404
     except KeyError as e:
-        print(f"欄位錯誤: {e}")
+        # 如果 CSV 缺少 '是否有心臟病' 或其他關鍵欄位
         return jsonify({"success": False, "error": f"CSV 欄位錯誤: {e}"}), 400
     except Exception as e:
-        print(f"伺服器錯誤: {e}") 
-        return jsonify({"success": False, "error": f"伺服器內部錯誤: {e}"}), 500
+        return jsonify({"success": False, "error": f"伺服器錯誤: {e}"}), 500
 
-# --- 【【【新增 API 路由：邏輯迴歸預測】】】 ---
+
 @app.route("/api/logistic/predict", methods=['POST'])
 def logistic_predict():
     """
-    使用快取的「圖表模型 (model_plot)」來執行預測
+    API 端點：使用「圖表模型」（兩個特徵）預測新資料。
+    
+    Input JSON:
+        { "st_slope": float, "angina": float }
+    
+    Returns:
+        JSON: 包含預測類別和機率的 JSON 物件。
     """
     try:
-        # 1. 取得快取的模型
+        # 取得快取的模型
         results = get_logistic_results()
         model_plot = results["model_plot"]
         
-        # 2. 取得前端傳來的 JSON 資料
         data = request.get_json()
         st_slope = float(data['st_slope'])
         angina = float(data['angina'])
         
-        # 3. 建立 Pandas DataFrame (必須和訓練時的欄位名稱/順序一致)
-        feature_names = ['ST 段斜率', '運動是否誘發心絞痛']
+        # 準備模型所需的 DataFrame 格式
         input_df = pd.DataFrame({
             'ST 段斜率': [st_slope],
             '運動是否誘發心絞痛': [angina]
-        }, columns=feature_names)
+        })
 
-        # 4. 執行預測
-        # (A) 預測類別 (0 或 1)
+        # 進行預測
         prediction_class = int(model_plot.predict(input_df)[0])
-        
-        # (B) 預測機率 (例如 [0.8, 0.2])
-        #     我們只需要「有心臟病 (Class 1)」的機率
-        probability_class_1 = model_plot.predict_proba(input_df)[0][1]
+        probability_class_1 = model_plot.predict_proba(input_df)[0][1] # 類別 1 (有心臟病) 的機率
 
         return jsonify({
             "success": True,
             "prediction_class": prediction_class,
             "probability": round(probability_class_1, 4)
-            # (我們回傳機率，但 JS 端會用 6 種固定文字)
         })
-
     except Exception as e:
-        print(f"預測時發生錯誤: {e}")
         import traceback
-        traceback.print_exc()
+        traceback.print_exc() # 在伺服器控制台印出詳細錯誤
         return jsonify({"success": False, "error": str(e)}), 500
 
+
 # -----------------------------------------------------------------
-#     決策樹 API (保持不變)
+# 6. 決策樹 (Decision Tree) - 核心邏輯與 API
 # -----------------------------------------------------------------
 def get_decision_tree_results():
-    # ... (你現有的決策樹快取函式 - 不變) ...
     """
-    【已修改】
-    強制使用 'ST 段斜率' 和 '運動是否誘發心絞痛' 訓練模型，
-    以匹配前端 UI 的互動預測功能。
+    訓練決策樹模型並快取結果。
+
+    如果快取中已有結果，則直接回傳快取。
+    此函式會：
+    1.  讀取資料。
+    2.  僅使用 'ST 段斜率' 和 '運動是否誘發心絞痛' 兩個特徵。
+    3.  使用 `GridSearchCV` 進行交叉驗證，自動找出最佳超參數（如 max_depth）。
+    4.  計算最佳模型的評估指標。
+    5.  產生用於視覺化的 `dot_data` (Graphviz 格式)。
+    
+    Returns:
+        dict: 包含模型、指標和圖表資料的快取字典 (dt_cache)。
     """
-    # 檢查全域快取
+    # 檢查快取
     if "best_model" in dt_cache:
-        # 如果快取中已有資料，直接回傳
         return dt_cache
 
-    print("--- 正在訓練決策樹模型 (GridSearchCV)，請稍候... ---")
+    print("--- (快取未命中) 正在訓練決策樹模型 ---")
     
-    # --- 執行一次您完整的 Colab 流程 ---
+    # 1. 讀取資料
     base_dir = os.path.dirname(os.path.abspath(__file__))
     csv_path = os.path.join(base_dir, 'data', 'heart.csv')
     qust_cleaned = pd.read_csv(csv_path)
-
+    
     target = '是否有心臟病'
     y = qust_cleaned[target]
-    
-    # 1. --- 【重點修改】 ---
-    # 移除自動篩選
-    # corr_matrix = qust_cleaned.corr()
-    # ...
-    # 改為「固定特徵」，以匹配 UI
-    selected_features = ['ST 段斜率', '運動是否誘發心絞痛']
-    
-    # 檢查特徵是否存在
-    for feature in selected_features:
-        if feature not in qust_cleaned.columns:
-            raise KeyError(f"資料集 'heart.csv' 中缺少必要的特徵: {feature}")
-            
-    X_selected = qust_cleaned[selected_features]
-    # --- 【修改結束】 ---
 
-    # 2. 資料分割 (不變)
+    # 2. 特徵工程：僅使用固定的兩個特徵
+    selected_features = ['ST 段斜率', '運動是否誘發心絞痛']
+    X_selected = qust_cleaned[selected_features]
+
+    # 3. 資料分割
     X_train, X_test, y_train, y_test = train_test_split(X_selected, y, test_size=0.3, random_state=42)
 
-    # 3. 決策樹調參 (GridSearchCV) (不變)
+    # 4. 模型訓練：使用 GridSearchCV 尋找最佳參數
+    # 定義要嘗試的參數網格
     param_grid = {
-        'max_depth': [3, 5, 7, 10, None],
-        'min_samples_split': [2, 5, 10],
-        'min_samples_leaf': [1, 2, 4]
+        'max_depth': [3, 5, 7, 10, None],      # 樹的最大深度
+        'min_samples_split': [2, 5, 10],   # 節點再分割所需的最小樣本數
+        'min_samples_leaf': [1, 2, 4]      # 葉節點最少的樣本數
     }
+    
     dt_model = DecisionTreeClassifier(random_state=42)
+    
+    # 使用 5 折交叉驗證 (cv=5) 和 'accuracy' 作為評分標準
     grid_search = GridSearchCV(dt_model, param_grid, cv=5, scoring='accuracy')
     grid_search.fit(X_train, y_train)
+    
+    # 取得GridSearch找到的最佳模型
     best_dt_model = grid_search.best_estimator_
 
-    # 4. 評估 (不變)
+    # 5. 模型評估
     y_pred = best_dt_model.predict(X_test)
     y_pred_proba = best_dt_model.predict_proba(X_test)[:, 1]
+    
     accuracy = accuracy_score(y_test, y_pred)
     report = classification_report(y_test, y_pred, output_dict=True)
     auc_score = roc_auc_score(y_test, y_pred_proba)
+    
+    # 儲存評估指標
     metrics = {
         "accuracy": round(accuracy, 4),
         "precision": round(report['weighted avg']['precision'], 4),
@@ -277,46 +319,45 @@ def get_decision_tree_results():
         "auc": round(auc_score, 4)
     }
     
-    # 5. 產生 DOT data (不變)
+    # 6. 產生 Graphviz 視覺化資料 (DOT 格式)
     dot_data = export_graphviz(
         best_dt_model,
         out_file=None,
         feature_names=X_selected.columns,
-        class_names=['無心臟病', '有心臟病'],
+        class_names=['無心臟病', '有心臟病'], # 類別 0 和 1 的名稱
         filled=True,
         rounded=True,
         special_characters=True
     )
     
-    # 6. 儲存所有結果到快取中 (不變)
+    # 7. 儲存到快取
     dt_cache["best_model"] = best_dt_model
     dt_cache["metrics"] = metrics
     dt_cache["dot_data"] = dot_data
     dt_cache["description"] = {
         "dataset": "心臟衰竭資料集",
-        "selected_features": selected_features, # 這現在會是 ['ST 段斜率', '運動是否誘發心絞痛']
+        "selected_features": selected_features,
         "train_size": len(X_train),
         "test_size": len(X_test),
         "total_samples": len(qust_cleaned),
         "target": target,
-        "best_params": grid_search.best_params_
+        "best_params": grid_search.best_params_ # 儲存 GridSearch 找到的最佳參數
     }
     
-    print("--- 決策樹模型訓練完畢並已快取！ ---")
+    print(f"--- 決策樹模型訓練完成 (最佳參數: {grid_search.best_params_}) ---")
     return dt_cache
 
 
 @app.route("/api/decision_tree/data")
 def decision_tree_data():
-    # ... (你現有的決策樹 /data API - 不變) ...
     """
-    【已優化】決策樹 API - 僅提供「評估指標」
+    API 端點：取得決策樹模型的評估指標和描述資訊。
+    
+    Returns:
+        JSON: 包含 metrics 和 description 的 JSON 物件。
     """
     try:
-        # 從快取中取得 results (如果快取為空, get_decision_tree_results 會自動訓練)
         results = get_decision_tree_results()
-        
-        # 直接回傳快取中的資料
         response = {
             "success": True,
             "metrics": results["metrics"],
@@ -324,113 +365,99 @@ def decision_tree_data():
         }
         return jsonify(response)
     except Exception as e:
-        print(f"API 錯誤 (/data): {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 
 @app.route("/api/decision_tree/graph")
 def decision_tree_graph():
-    # ... (你現有的決策樹 /graph API - 不變) ...
     """
-    【已優化】動態產生 Graphviz 樹狀結構圖 (SVG)
+    API 端點：產生並回傳決策樹的 SVG 影像。
+    
+    Returns:
+        Response: Mimetype 為 'image/svg+xml' 的 SVG 影像。
     """
     try:
-        # 從快取中取得 results (如果快取為空, get_decision_tree_results 會自動訓練)
         results = get_decision_tree_results()
         
-        # 從快取中取得 DOT data
-        dot_data = results["dot_data"]
-        
-        # 6. 使用 Graphviz 動態產生 SVG
-        graph = graphviz.Source(dot_data)
+        # 使用 graphviz 將 DOT 字串轉換為 SVG
+        graph = graphviz.Source(results["dot_data"])
         svg_data = graph.pipe(format='svg')
-
-        # 7. 回傳 SVG 圖片
+        
         return Response(svg_data, mimetype='image/svg+xml')
-
     except Exception as e:
-        print(f"產生 Graphviz 錯誤: {e}")
-        return f"產生樹狀圖時發生錯誤: {e}", 500
+        return f"產生樹狀圖錯誤: {e}", 500
 
 
 @app.route("/api/decision_tree/predict", methods=['POST'])
 def decision_tree_predict():
-    # ... (你現有的決策樹 /predict API (v9) - 不變) ...
     """
-    (v9 - 最終修正版)
+    API 端點：預測單筆資料，並回傳其在決策樹中的「路徑」和「葉節點」資訊。
+    這對於在前端 SVG 上視覺化決策過程非常有用。
     
-    Bug 原因： v8 使用了 Numpy 陣列 (input_array) 餵給模型，
-             但模型是用 Pandas DataFrame 訓練的，導致格式不符而崩潰。
-             
-    修正：   我們必須使用 Pandas DataFrame (input_df) 來餵食模型，
-             這才是 model.apply() 和 model.decision_path() 
-             唯一能 100% 正確辨識的格式。
+    Input JSON:
+        { "st_slope": float, "angina": float }
+        
+    Returns:
+        JSON: 包含決策路徑 (path_nodes)、葉節點 ID (leaf_id) 和機率 (probability) 的物件。
     """
     try:
-        # 1. 取得快取的模型
         results = get_decision_tree_results()
         model = results["best_model"]
-        # 我們從快取中「知道」特徵順序
         feature_names = results["description"]["selected_features"]
-        
-        # 2. 取得前端傳來的 JSON 資料
+
+        # 1. 取得輸入資料
         data = request.get_json()
         st_slope = float(data['st_slope'])
         angina = float(data['angina'])
-        
-        # 3. 【【【關鍵 Bug 修正】】】
-        #    我們「必須」建立 Pandas DataFrame，
-        #    因為模型是用這個格式訓練的。
-        
+
+        # 2. 準備模型所需的 DataFrame
+        # 確保 columns 順序與訓練時一致
         input_df = pd.DataFrame({
             'ST 段斜率': [st_slope],
             '運動是否誘發心絞痛': [angina]
-        }, columns=feature_names) # 確保欄位順序正確
+        }, columns=feature_names)
 
-        # --- 【【【修正完畢】】】 ---
-
-        # 4. 執行預測 (現在餵給它 input_df)
+        # 3. 取得決策路徑和葉節點
+        # .decision_path() 回傳一個稀疏矩陣，.indices 包含路徑上的所有節點 ID
+        path_nodes = model.decision_path(input_df).indices.tolist()
         
-        # (A) 取得決策路徑 (用於高亮)
-        #    (這個 v8 的 .indices.tolist() 語法是正確的)
-        path_sparse_matrix = model.decision_path(input_df)
-        path_nodes = path_sparse_matrix.indices.tolist()
-
-        # (B) 取得最終葉節點 (Leaf ID)。
-        #    (這行現在 100% 會成功)
+        # .apply() 回傳每個樣本最終落入的葉節點 ID
         leaf_id = int(model.apply(input_df)[0])
         
-        # (C) 取得葉節點上的 value
+        # 4. 從模型的 .tree_ 屬性中提取葉節點的值 (樣本分佈)
+        # model.tree_.value[leaf_id] 會回傳 [[class_0_count, class_1_count]]
         values = model.tree_.value[leaf_id].flatten().tolist()
-        
-        # (D) 計算「有心臟病」(Class 1) 的機率
         total_samples = sum(values)
-        prob_class_1 = 0.0
-        if total_samples > 0:
-            prob_class_1 = values[1] / total_samples
+        
+        # 計算類別 1 (有心臟病) 的機率
+        prob_class_1 = values[1] / total_samples if total_samples > 0 else 0.0
 
         return jsonify({
             "success": True,
-            "path_nodes": path_nodes,   # <--- 這次 100% 正確
-            "leaf_id": leaf_id,         # <--- 這次 100% 正確
-            "values": values,
-            "probability": round(prob_class_1, 4)
+            "path_nodes": path_nodes,  # 決策路徑上的所有節點 ID
+            "leaf_id": leaf_id,      # 最終的葉節點 ID
+            "values": values,      # 葉節點的樣本分佈 [無心臟病, 有心臟病]
+            "probability": round(prob_class_1, 4) # 預測為「有心臟病」的機率
         })
-
     except Exception as e:
-        print(f"預測時發生錯誤: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
 
-# --- 啟動應用 (不變) ---
+# --- 7. 啟動應用 ---
+
 def main():
-    """啟動應用（教學用：啟用 debug 模式）"""
-    print("--- 伺服器已啟動，正在監聽 http://0.0.0.0:5000 ---")
-    print("--- 警告：Debug 模式已開啟，請勿用於生產環境 ---")
-    app.run(debug=True)
-    # app.run(debug=True, host='0.0.0.0', port=5000)
+    """
+    主函式：啟動 Flask 伺服器。
+    """
+    print("--- 伺服器啟動，監聽 http://0.0.0.0:5000 ---")
+    print("--- Debug 模式已開啟，請勿用於生產環境 ---")
+    # debug=True 會在程式碼變更時自動重啟伺服器
+    # host='0.0.0.0' 讓區域網路中的其他裝置可以存取
+    app.run(debug=True) #個人開發測試用
+    # app.run(debug=True, host='0.0.0.0', port=5000) 
+    #報告其他設備演示用，誤用於部屬
 
 if __name__ == "__main__":
     main()

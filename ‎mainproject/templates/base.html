@@ -5,36 +5,47 @@
     {% block head %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>{% block title %}Python機器學習課程{% endblock %}</title>
-    {# 使用 Flask 靜態資源 url_for 連結到 /static/css/styles.css #}
+
+    {#
+    使用 Flask 的 url_for() 輔助函式來產生靜態檔案的 URL。
+    'static' 是指 static 資料夾，filename 指向該資料夾內的路徑。
+    這樣做可以確保路徑在不同部署環境下依然正確。
+    #}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-    <!-- 已移除內嵌 <style>，相關導覽列樣式已移至 static/css/index.css -->
+
     {% endblock %}
 </head>
 
 <body>
-    <!-- 導覽列 -->
     <nav class="navbar">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index')}}">職能發展學院-心臟病專題</a>
+            <a class="navbar-brand" href="{{ url_for('index')}}">職能發展學院-AI 賦能心臟病早期預警</a>
+
             <ul class="nav-list">
                 <li class="nav-item">
-                    <a href="{{ url_for('index')}}" {% if request.endpoint=='index' %} class="active" {%
-                        endif%}>專題簡介</a>
+                    {#
+                    使用 Jinja2 條件判斷：
+                    `request.endpoint` 是 Flask 中目前請求所對應的路由函式名稱。
+                    如果目前頁面的 endpoint 是 'index'，則添加 'active' CSS class，
+                    這通常用於高亮顯示當前所在的頁面連結。
+                    #}
+                    <a href="{{ url_for('index')}}" {% if request.endpoint=='index' %} class="active" {% endif
+                        %}>專題簡介</a>
                 </li>
-                <!-- decision_tree -->
+
                 <li class="nav-item">
-                    <a href="{{ url_for('decision_tree')}}" {% if request.endpoint=='decision_tree' %} class="active" {% endif
-                        %}>決策樹</a>
+                    <a href="{{ url_for('decision_tree')}}" {% if request.endpoint=='decision_tree' %} class="active" {%
+                        endif %}>決策樹</a>
                 </li>
 
                 <li class="nav-item">
                     <a href="{{ url_for('logistic')}}" {% if request.endpoint=='logistic' %} class="active" {% endif
                         %}>邏輯迴歸</a>
                 </li>
-                
             </ul>
-            <!-- 手機版導覽切換按鈕 -->
+
             <button class="nav-toggle" aria-label="顯示導覽選單">
                 <svg class="hamburger-icon" viewBox="0 0 100 100" width="32" height="32">
                     <rect class="line top" width="80" height="10" x="10" y="25" rx="5"></rect>
@@ -45,24 +56,21 @@
         </div>
     </nav>
 
-    <!-- 主要內容區 -->
     <main class="container">
         {% block content %}
-
         {% endblock %}
     </main>
-    <!-- 頁尾 -->
+
     <footer>
         <div class="container">
             <p>&copy; 2025 職能發展學院. All rights reserved.</p>
         </div>
     </footer>
 
-    <!-- 載入手機版導覽的行為腳本 -->
     <script src="{{ url_for('static', filename='js/base.js') }}"></script>
-    {% block code %}
 
-    {% endblock %}
+    <!-- {% block code %}
+    {% endblock %} -->
 
     {% block scripts %}
     {% endblock %}

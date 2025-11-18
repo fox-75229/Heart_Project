@@ -1,66 +1,64 @@
+/*
+ * 首頁樣式 (index.css)
+ * * 說明：
+ * 此檔案專門用於設定 index.html (專題簡介頁面) 的樣式。
+ * 包含：Hero 區塊、演算法卡片、優缺點列表、特色區塊等。
+ */
 
-/* Hero Section */
+/* --- 1. 英雄區塊 (Hero Section) --- */
+/* 頁面頂部的主視覺區塊 */
 .hero-section {
-    text-align: center; /*文字置中*/
-    padding: 3rem 1rem; /*盒內距*/
-    
-    /*定義基礎背景*/
-    --base-background: linear-gradient(90deg, rgb(30, 165, 255) 2%, rgba(118, 69, 255, 1) 66%, rgba(132, 61, 255, 1) 100%) ;
-    /*定義光源*/
-    --spotlight-background: radial-gradient(
-        ellipse 100px 70px  at var(--mouse-x, 30%) var(--mouse-y, 30%), rgba(255, 255, 255, 0.2), transparent 400%
-    );
-
-    /*預設基礎背景*/
-    background: var(--base-background);
-
-    transition: transform 0.2s ease;
-    
-    /* 設定變形和濾鏡的過渡動畫效果 */
+    text-align: center;
+    padding: 3rem 1rem;
     color: #fff;
     border-radius: 10px;
-    /* 設定區塊的邊框圓角為 10 像素 */
     margin: 2rem 1rem 3rem;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-    /* 設定區塊的陰影效果，增加立體感 */
+    transition: transform 0.2s ease;
+
+    /* --- 滑鼠互動背景 --- */
+    /* 1. 定義 CSS 變數：基礎漸層背景 */
+    --base-background: linear-gradient(90deg, rgb(30, 165, 255) 2%, rgba(118, 69, 255, 1) 66%, rgba(132, 61, 255, 1) 100%);
+
+    /* 2. 定義 CSS 變數：滑鼠聚光燈效果 */
+    /* var(--mouse-x, 30%) 會讀取 JS 設定的變數，若無則使用預設值 30% */
+    --spotlight-background: radial-gradient(ellipse 100px 70px at var(--mouse-x, 30%) var(--mouse-y, 30%), rgba(255, 255, 255, 0.2), transparent 400%);
+
+    /* 3. 預設使用基礎背景 */
+    background: var(--base-background);
 }
 
+/* 4. 滑鼠懸停時，疊加聚光燈背景 (效果由 index.js 驅動) */
 .hero-section:hover {
     background: var(--spotlight-background), var(--base-background);
 }
 
 .hero-section h1 {
     font-size: 2.5rem;
-    /* 設定主標題 (h1) 的字體大小 */
     margin-bottom: 1rem;
-    /* 設定主標題 (h1) 的下邊距 */
     font-weight: bold;
-    /* 設定主標題 (h1) 的字體為粗體 */
 }
 
 .hero-section .lead {
     font-size: 1.3rem;
-    /* 設定引言 (.lead) 的字體大小 */
     margin: 1rem 0;
-    /* 設定引言 (.lead) 的上下邊距 1rem，左右 0 */
     opacity: 0.95;
-    /* 設定引言 (.lead) 的透明度為 95% */
 }
 
 .hero-section .subtitle {
     font-size: 1rem;
-    /* 設定次標題 (.subtitle) 的字體大小 */
     opacity: 0.85;
-    /* 設定次標題 (.subtitle) 的透明度為 85% */
 }
 
+/* 關鍵：防止滑鼠事件被 H1, p 標籤攔截 */
+/* 這樣 .hero-section 才能正確偵測到 mousemove 事件以驅動聚光燈 */
 .hero-section h1,
 .hero-section .lead,
 .hero-section .subtitle {
     pointer-events: none;
 }
 
-/* Algorithms Section */
+/* --- 2. 演算法區塊 (Algorithms Section) --- */
 .algorithms-section {
     padding: 3rem;
 }
@@ -72,36 +70,38 @@
     text-align: center;
 }
 
-/* Algorithms Cards */
-
+/* 演算法卡片 (.algorithm-card) */
 .algorithm-card {
     background-color: #ffffff;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     margin-bottom: 2rem;
     overflow: hidden;
-    transition: transform 0.3s ease, box-shadowx 0.3s ease;
+    /* 確保子元素 (如 header) 不會超出圓角 */
+    /* (修正) 原為 box-shadowx，已修正為 box-shadow */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
+/* 卡片懸停效果：輕微上浮並加深陰影 */
 .algorithm-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15)
 }
-
 
 .algorithm-card .card-header {
     background: linear-gradient(90deg, rgb(4, 0, 77) 0%, rgba(9, 9, 121, 1) 35%, rgba(0, 212, 255, 1) 100%);
     transition: transform 0.2s ease, filter 0.3s ease;
     padding: 1.5rem;
     color: #ffffff;
-    text-align: center;
     display: flex;
+    /* 讓 h3 和 badge 左右排列 */
     justify-content: space-between;
     align-items: center;
 }
 
 .algorithm-card .card-header:hover {
     filter: brightness(1.1);
+    /* 懸停時提亮 */
 }
 
 .algorithm-card .card-header h3 {
@@ -109,12 +109,12 @@
     margin: 0;
 }
 
+/* 分類標籤 (e.g., "分類模型") */
 .algorithm-card .badge {
     background-color: rgba(36, 36, 36, 0.377);
     padding: 0.3rem 0.8rem;
     border-radius: 20px;
     font-size: 0.85rem;
-
 }
 
 .algorithm-card .card-body {
@@ -127,9 +127,11 @@
     margin-top: 1.5rem;
     margin-bottom: 0.8rem;
     border-bottom: 2px solid #667eea;
+    /* 標題底線 */
     padding-bottom: 0.5rem;
 }
 
+/* 第一個 H4 不要有上邊距 */
 .algorithm-card .card-body h4:first-child {
     margin-top: 0;
 }
@@ -150,11 +152,12 @@
     margin-bottom: 0.5rem;
 }
 
-/*pros and cons*/
-
+/* 優缺點列表 (.pros-cons) */
 .pros-cons {
     display: grid;
+    /* 使用 Grid 佈局 */
     grid-template-columns: 1fr 1fr;
+    /* 左右 1:1 兩欄 */
     gap: 1.5rem;
     margin: 1rem 0;
 }
@@ -165,15 +168,16 @@
     border-radius: 8px;
 }
 
+/* 優點 (綠色) */
 .pros {
     background-color: rgba(40, 167, 69, 0.1);
     border-left: 4px solid rgba(40, 167, 69, 0.7);
 }
 
+/* 缺點 (紅色) */
 .cons {
     background-color: rgba(220, 53, 69, 0.08);
     border-left: 4px solid rgba(220, 53, 69, 0.6);
-
 }
 
 .pros strong,
@@ -189,12 +193,13 @@
     list-style: disc;
 }
 
-/*aciton button*/
+/* --- 3. 行動呼籲按鈕 (Call-to-Action) --- */
 .action-button {
     text-align: center;
     margin-top: 2rem;
     padding-top: 1.5rem;
     border-top: 1px solid #ddd;
+    /* 頂部分隔線 */
 }
 
 .btn-primary {
@@ -203,6 +208,7 @@
     color: #fff;
     padding: 0.8rem 2rem;
     border-radius: 25px;
+    /* 膠囊狀按鈕 */
     text-decoration: none;
     font-weight: bold;
     font-size: 1.1rem;
@@ -212,13 +218,16 @@
 
 .btn-primary:hover {
     transform: translateY(-2px);
+    /* 懸停時輕微上浮 */
     filter: brightness(1.15);
+    /* 提亮 */
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
-/* info-section */
+/* --- 4. 資訊/特色區塊 (Info Section) --- */
 .info-section {
     background-color: #f4f4f4;
+    /* 淺灰色背景，與卡片區分 */
     padding: 2rem;
     border-radius: 10px;
     margin-bottom: 2rem;
@@ -231,9 +240,11 @@
     text-align: center;
 }
 
+/* 特色列表 (e.g., 視覺化、互動、真實資料) */
 .features {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
+    /* 三欄式佈局 */
     gap: 2rem;
 }
 
@@ -257,7 +268,8 @@
 }
 
 
-
+/* --- 5. 響應式設計 (RWD) --- */
+/* 當螢幕寬度 <= 768px (手機/平板) */
 @media (max-width: 768px) {
     .hero-section h1 {
         font-size: 2rem;
@@ -271,20 +283,21 @@
         font-size: 0.8rem;
     }
 
+    /* 卡片標題改為垂直堆疊 */
     .algorithm-card .card-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.5rem;
     }
 
-
+    /* 優缺點列表改為單欄 */
     .pros-cons {
         grid-template-columns: 1fr;
     }
 
+    /* 特色列表改為單欄 */
     .features {
         grid-template-columns: 1fr;
         gap: 1.5rem;
     }
-
 }
