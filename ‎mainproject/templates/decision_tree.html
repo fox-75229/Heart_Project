@@ -185,11 +185,6 @@
 
 {# 5. 定義 'scripts' 區塊 #}
 {% block scripts %}
-{#
-(註：{{super()}} 在這裡是無害但多餘的，
-因為 base.html 的 'scripts' 區塊中沒有內容。)
-#}
-<!-- {{super()}} -->
 
 {# 載入決策樹頁面的主要互動腳本 #}
 <script src="{{ url_for('static', filename='js/decision_tree.js') }}"></script>
