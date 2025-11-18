@@ -1,5 +1,11 @@
-/* logistic.css */
-/* --- 1. 頁面主要佈局 --- */
+/*
+ * 邏輯迴歸頁面樣式 (logistic.css)
+ * * 說明：
+ * 負責 logistic.html 的視覺呈現。
+ * 包含：Plotly 圖表容器、互動控制項、預測結果顯示與模型指標。
+ */
+
+/* --- 1. 頁面佈局 (Layout) --- */
 .logistic-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -51,39 +57,19 @@
     font-weight: 500;
 }
 
-/* --- 3. 圖例說明 (.legeng-info) --- */
-/* 【更新】配合您 HTML 中的 .legeng-info 拼寫錯誤 */
-
+/* --- 3. 互動與圖例區塊 (.predict-box) --- */
+/* 使用 Grid 將「圖例」與「控制面板」並排 */
 .predict-box {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    /* 桌機水平排列 */
+    /* 左右兩欄等寬 */
     gap: 1.5rem;
     align-items: stretch;
     margin-bottom: 2rem;
 }
 
-.predict-box>* {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-}
-
-/* ============================= */
-/* 響應式：平板 */
-/* ============================= */
+/* RWD: 平板與手機改為單欄垂直排列 */
 @media (max-width: 992px) {
-    .predict-box {
-        grid-template-columns: 1fr;
-        /* 變單欄但保持美觀 */
-        gap: 1rem;
-    }
-}
-
-/* ============================= */
-/* 手機排版*/
-/* ============================= */
-@media (max-width: 768px) {
     .predict-box {
         grid-template-columns: 1fr;
         gap: 1rem;
@@ -92,19 +78,21 @@
     .legeng-info,
     .control-panel {
         width: 100%;
-        margin: 0 auto;
     }
 }
 
-
-
+/* 3.1 圖例說明 (.legeng-info) */
+/* (註: 配合 HTML 中的 class 拼寫 legeng) */
 .legeng-info {
     background: white;
     padding: 1.5rem;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     border: 1px solid #e0e0e0;
-    margin-bottom: 2rem;
+    /* 讓內容撐開高度 (配合 Flex/Grid) */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
 }
 
 .legeng-info h4 {
@@ -132,14 +120,12 @@
     font-style: italic;
 }
 
-/* 【更新】圖例 - 圓點樣式 (訓練資料) */
-/* (配合您 HTML 中的 .legeng- 拼寫錯誤) */
+/* 圖例圖示 - 圓點 (訓練集) */
 .legeng-0-train,
 .legeng-1-train {
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    /* 圓形 */
     display: inline-block;
     border: 1px solid #333;
 }
@@ -152,9 +138,7 @@
     background-color: red;
 }
 
-
-/* 【更新】圖例 - 三角形樣式 (測試資料) */
-/* (配合您 HTML 中的 .legeng- 拼寫錯誤) */
+/* 圖例圖示 - 三角形 (測試集) */
 .legeng-0-test,
 .legeng-1-test {
     width: 0;
@@ -162,12 +146,11 @@
     border-left: 6px solid transparent;
     border-right: 6px solid transparent;
     border-bottom: 12px solid;
-    /* 顏色由下方 class 決定 */
+    /* 底部顏色決定三角形顏色 */
     display: inline-block;
     margin-left: 1px;
     margin-right: 5px;
     transform: translateY(2px);
-    border-top-color: transparent !important;
 }
 
 .legeng-0-test {
@@ -179,22 +162,17 @@
 }
 
 
-/*========================================*/
-/* 1. 控制面板 (主體) */
-/*========================================*/
+/* 3.2 控制面板 (.control-panel) */
 .control-panel {
     background: white;
     padding: 1.5rem;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     border: 1px solid #e0e0e0;
-    margin-bottom: 2rem;
-    /*置中*/
     display: flex;
     flex-direction: column;
     align-items: center;
 }
-
 
 .control-header h4 {
     color: #0B346E;
@@ -202,34 +180,25 @@
     font-size: 1.5rem;
 }
 
-/*========================================*/
-/* 2. ST 段斜率 (滑桿) */
-/*========================================*/
+/* --- 4. 自訂控制項樣式 --- */
+
+/* 4.1 滑桿 (Slider) */
 .st-control-container {
     display: flex;
     flex-direction: column;
-    /* 讓 標籤 和 滑桿 垂直堆疊 */
     align-items: center;
-    /* 讓它們在 .control-panel 中置中 */
     gap: 0.5rem;
-    /* 標籤和滑桿的間距 */
     width: 100%;
-    /* 填滿 .control-panel 的寬度 */
     max-width: 400px;
-    /* 設定一個最大寬度，保持美觀 */
     margin: 0.5rem 0;
-    /* (增加垂直間距) */
 }
 
-/* 2. 你的 <label> 標籤 */
 .st-slider-label {
     font-weight: bold;
     color: #0B346E;
     font-size: 1.1rem;
-    /* (來自你舊的 .st-control label 樣式) */
 }
 
-/* 3. 步驟滑桿的「內部」容器 */
 .st-control-stepped {
     width: 100%;
     display: flex;
@@ -238,32 +207,39 @@
     gap: 0.25rem;
 }
 
-/* 4. 頂部標籤 (下降, 平穩, 上升) */
-.slider-labels {
+.slider-labels,
+.slider-ticks {
     width: 100%;
     display: flex;
     justify-content: space-between;
-    /* 讓文字平均分佈 */
     font-size: 0.9rem;
-    color: #333;
-    font-weight: 500;
     padding: 0 5px;
     box-sizing: border-box;
 }
 
-/* 5. 滑桿 (修改過的 .slider 樣式) */
+.slider-labels {
+    color: #333;
+    font-weight: 500;
+}
+
+.slider-ticks {
+    color: #667eea;
+    font-weight: bold;
+}
+
+/* 滑桿本體 */
 .slider {
     width: 100%;
-    /* <-- 【重要】寬度改為 100%，以填滿新容器 */
     height: 6px;
     border-radius: 5px;
     background: #ddd;
     outline: none;
     appearance: none;
+    /* 移除預設樣式 */
     margin: 0.25rem 0;
-    /* (微調垂直間距) */
 }
 
+/* 滑桿握把 (Thumb) */
 .slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
@@ -285,26 +261,12 @@
     border: none;
 }
 
-/* 6. 底部數字 (0, 1, 2) */
-.slider-ticks {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.9rem;
-    color: #667eea;
-    font-weight: bold;
-    padding: 0 5px;
-    box-sizing: border-box;
-}
-
-
-/*========================================*/
-/* 3. 心絞痛 (Radio 按鈕) */
-/*========================================*/
+/* 4.2 單選按鈕 (Radio Buttons) */
 .angina-control {
     display: flex;
     align-items: center;
     gap: 4rem;
+    /* 標籤與選項的間距 */
     flex-wrap: wrap;
 }
 
@@ -331,9 +293,8 @@
     cursor: pointer;
 }
 
-/* 自訂 Radio Button 外觀 */
+/* 自訂 Radio 外觀 */
 .radio-option input[type="radio"] {
-    -webkit-appearance: none;
     appearance: none;
     margin: 0;
     background-color: #fff;
@@ -345,6 +306,7 @@
     place-content: center;
 }
 
+/* 勾選時的內部方塊 */
 .radio-option input[type="radio"]::before {
     content: "";
     width: 17px;
@@ -358,10 +320,7 @@
     transform: scale(1);
 }
 
-
-/*========================================*/
-/* 4. 預測按鈕 (新增功能) */
-/*========================================*/
+/* --- 5. 預測按鈕與載入動畫 --- */
 .predict-action {
     display: flex;
     justify-content: center;
@@ -397,11 +356,10 @@
 }
 
 .cta-button .fas {
-    /* 按鈕圖示 */
     margin-right: 8px;
 }
 
-/* 預測用的小載入動畫 */
+/* 小載入動畫 (按鈕旁) */
 .loading-spinner-small {
     width: 20px;
     height: 20px;
@@ -411,21 +369,57 @@
     animation: spin 1s linear infinite;
 }
 
-/* (你檔案中已有的 @keyframes spin) */
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
+/* --- 6. 預測結果顯示區 --- */
+.predict-container {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+    border: 1px solid #ddd;
+    display: none;
+    /* 預設隱藏，待有結果時顯示 */
+    flex-direction: column;
+    align-items: center;
 }
 
+.predict-container .predict-text p {
+    font-size: 1.2rem;
+    line-height: 1.7;
+    text-align: center;
+    margin: 0.5rem 0;
+}
 
+.predict-container .deg {
+    font-size: 1.3rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
 
+.predict-container .sug {
+    display: block;
+    font-size: 1.1rem;
+    color: #333;
+    margin-top: 0.5rem;
+}
 
-/* --- 4. 圖表 & 讀取中 (.chart-container) --- */
+/* 風險等級顏色 */
+.predict-container .deg.risk-high {
+    background-color: #d9534f;
+    color: white;
+}
+
+.predict-container .deg.risk-medium {
+    background-color: #f0ad4e;
+    color: white;
+}
+
+.predict-container .deg.risk-low {
+    background-color: #5cb85c;
+    color: white;
+}
+
+/* --- 7. 圖表容器 (Plotly) --- */
 .chart-container {
     width: 100%;
     margin: 2rem 0;
@@ -435,15 +429,13 @@
     border: 1px solid #e0e0e0;
 }
 
-/* Plotly 圖表容器 (ID) - 基礎樣式 */
 #plotly-chart {
     width: 100%;
     min-height: 550px;
     background-color: #fcfcfc;
-    /* 【關鍵修正】移除 display: flex */
 }
 
-/* 【新增】只有在 "loading" class 存在時，才使用 flex 置中動畫 */
+/* 載入中狀態 */
 #plotly-chart.loading {
     display: flex;
     justify-content: center;
@@ -458,6 +450,7 @@
     font-weight: 500;
 }
 
+/* 大載入動畫 (圖表中) */
 .loading-spinner {
     border: 5px solid #f3f3f3;
     border-top: 5px solid #0B346E;
@@ -467,6 +460,7 @@
     animation: spin 1s linear infinite;
 }
 
+/* 旋轉動畫關鍵影格 (共用) */
 @keyframes spin {
     0% {
         transform: rotate(0deg);
@@ -485,14 +479,13 @@
     font-weight: 500;
 }
 
-/* --- 5. 評估指標 (.metrics-container) --- */
+/* --- 8. 評估指標 (.metrics-container) --- */
 .metrics-container {
     margin-top: 2rem;
     margin-bottom: 2rem;
     text-align: center;
 }
 
-/* 【新增】h3 標題的樣式 */
 .metrics-container h3 {
     font-size: 1.8rem;
     color: #0B346E;
@@ -500,7 +493,6 @@
     font-weight: 600;
 }
 
-/* 【新增】.metrics-grid 才是真正的 Grid 容器 */
 .metrics-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -508,7 +500,6 @@
     text-align: center;
 }
 
-/* 【修改】卡片使用 Flex 佈局來對齊內容 */
 .metrics-card {
     padding: 1.5rem;
     background-color: #ffffff;
@@ -517,8 +508,6 @@
     text-align: center;
     border: 1px solid #e0e0e0;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-
-    /* 【新增】使用 Flex 讓內容垂直分佈 */
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -529,7 +518,6 @@
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
 }
 
-/* h4 標題 (準確率, 精確率...) */
 .metrics-card h4 {
     margin: 0 0 0.75rem 0;
     font-size: 1rem;
@@ -552,7 +540,7 @@
     margin-top: auto;
 }
 
-/* --- 6. 模型資訊 (.model-info) --- */
+/* --- 9. 模型資訊 (.model-info) --- */
 .model-info {
     background: #f8f9fa;
     padding: 2rem;
@@ -583,7 +571,6 @@
     flex-direction: column;
 }
 
-
 .info-label {
     font-weight: 600;
     color: #333;
@@ -596,64 +583,4 @@
     color: #0B346E;
     font-size: 1.1rem;
     word-break: break-all;
-}
-
-/* --- 5. 【新增】預測建議 --- */
-.predict-container {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    margin-bottom: 2rem;
-    border: 1px solid #ddd;
-}
-
-/* 預測結果的「內部文字」樣式 */
-.predict-container .predict-text p {
-    font-size: 1.2rem;
-    line-height: 1.7;
-    text-align: center;
-    margin: 0.5rem 0;
-}
-
-.predict-container .deg {
-    font-size: 1.3rem;
-    padding: 2px 6px;
-    border-radius: 4px;
-}
-
-.predict-container .sug {
-    display: block;
-    /* 讓建議文字換行 */
-    font-size: 1.1rem;
-    color: #333;
-    margin-top: 0.5rem;
-}
-
-/* 風險等級顏色 */
-.predict-container .deg.risk-high {
-    background-color: #d9534f;
-    /* 紅色 */
-    color: white;
-}
-
-.predict-container .deg.risk-medium {
-    background-color: #f0ad4e;
-    /* 橘色 */
-    color: white;
-}
-
-.predict-container .deg.risk-low {
-    background-color: #5cb85c;
-    /* 綠色 */
-    color: white;
-}
-
-/* 顯示錯誤時的樣式 */
-.error-text {
-    color: #D8000C;
-    background-color: #FFD2D2;
-    padding: 1rem;
-    border-radius: 8px;
-    font-weight: 500;
 }
